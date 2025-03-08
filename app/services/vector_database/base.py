@@ -48,7 +48,6 @@ class VectorDatabaseService:
         Sets up the device for model inference and initializes the embeddings model
         with the configured settings.
         """
-
         self._ENGINE = create_async_engine(DATABASE_URL)
 
         # Determine the best available device
