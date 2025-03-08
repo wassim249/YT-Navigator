@@ -3,6 +3,10 @@
 from .authentication import register_view
 from .home import home_view
 from .profile import profile_view
+from .query import (
+    query,
+    query_page,
+)
 from .scan import (
     delete_video,
     get_channel_information,
@@ -16,4 +20,6 @@ __all__ = [
     "get_channel_information",
     "scan_channel",
     "delete_video",
+    "query_page",
+    "query",
 ]

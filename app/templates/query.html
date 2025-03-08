@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Query Results{% endblock title %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6 bg-[var(--bg-color)] text-[var(--text-color)] min-h-screen flex flex-col">
+    <div class="flex-grow">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 bg-red-900 border-l-4 border-red-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-red-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-100">{{ message }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if channel %}
+            <!-- Channel Information Section -->
+            <div class="mb-8">
+                <div class="bg-[#1E1E1E] shadow-sm rounded-lg overflow-hidden">
+                    <div class="px-6 py-4 flex justify-between items-center cursor-pointer" onclick="toggleChannelInfo()">
+                        <h2 class="text-lg font-medium text-white flex items-center">
+                            <i class="fab fa-youtube text-yt-red mr-3"></i>
+                            <span>Channel Information</span>
+                        </h2>
+                        <button type="button" class="focus:outline-none">
+                            <i id="channel-info-icon" class="fas fa-chevron-down text-[var(--muted-text-color)] transition-transform"></i>
+                        </button>
+                    </div>
+                    <div class="border-t border-gray-600" id="channel-info-content">
+                        <div class="p-6">
+                            <div class="flex items-start space-x-4">
+                                {% if channel.profile_image_url %}
+                                    <img src="{{ channel.profile_image_url }}" alt="Channel Profile"
+                                         class="w-16 h-16 rounded-full" width="64" height="64"/>
+                                {% else %}
+                                    <div class="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center">
+                                        <i class="fas fa-user text-[var(--muted-text-color)]"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-medium text-white">{{ channel.name }}</h3>
+                                    <p class="text-sm text-[var(--muted-text-color)]">@{{ channel.username }}</p>
+                                    <p class="mt-2 text-sm text-[var(--muted-text-color)]">{{ channel.description }}</p>
+                                    <a href="https://www.youtube.com/channel/{{ channel.id }}" target="_blank"
+                                       class="mt-3 inline-flex items-center text-sm text-yt-red hover:text-red-700 transition-colors">
+                                        <i class="fas fa-external-link-alt mr-2"></i>
+                                        View Channel on YouTube
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Search Bar -->
+        <div class="mb-8">
+            <form method="post" action="{% url 'app:query_request' %}" class="max-w-3xl mx-auto" id="search-form">
+                {% csrf_token %}
+                <input type="hidden" name="page" value="1">
+                <div class="flex rounded-lg shadow-sm focus-within:shadow-md transition-shadow duration-200">
+                    <input type="text" name="query_msg" id="query"
+                           class="flex-1 block w-full min-w-0 rounded-l-lg px-4 py-3 border border-gray-600 bg-[#1E1E1E] text-white placeholder-[var(--muted-text-color)] focus:outline-none focus:ring-2 focus:ring-yt-red focus:border-transparent text-sm"
+                           placeholder="Search in video content"
+                           value="{{ query_msg|default_if_none:'' }}">
+                    <button type="submit" id="search-button" class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium text-white bg-yt-red hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yt-red rounded-r-lg transition-colors">
+                        <i class="fas fa-search mr-2"></i>
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if not query_msg %}
+            <!-- Simple Welcome Section -->
+            <div class="max-w-2xl mx-auto text-center">
+                <div class="bg-[#1E1E1E] p-8 rounded-lg shadow-md">
+                    <div class="inline-block p-4 bg-[#2C2C2C] rounded-full mb-6">
+                        <i class="fas fa-video text-4xl text-yt-red"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white mb-4">Ready to explore this channel?</h1>
+                    <p class="text-[var(--muted-text-color)]">Type your query above to search through video content and discover valuable insights.</p>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if query_msg %}
+            <!-- Query Results -->
+            <div class="mb-8 text-center">
+                <h1 class="text-2xl font-bold text-white">Search Results</h1>
+                <p class="mt-2 text-sm text-[var(--muted-text-color)]">
+                    Results for: <span class="font-medium text-white">{{ query_msg }}</span>
+                </p>
+            </div>
+
+            {% if videos %}
+                <div class="space-y-6">
+                    {% for video in videos %}
+                        <div class="bg-[#1E1E1E] shadow-sm rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="md:col-span-1">
+                                    <a href="https://www.youtube.com/watch?v={{ video.videoId }}" target="_blank" 
+                                       class="block aspect-w-16 aspect-h-9">
+                                        <img src="{{ video.thumbnail }}" alt="{{ video.title }}"
+                                             class="w-full h-full object-cover" width="320" height="180"/>
+                                    </a>
+                                </div>
+                                <div class="md:col-span-3 p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h4 class="text-lg font-medium text-white hover:text-yt-red transition-colors">
+                                            <a href="https://www.youtube.com/watch?v={{ video.videoId }}"
+                                               target="_blank" class="video-title">{{ video.title }}</a>
+                                        </h4>
+                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">
+                                            {{ video.avg_score|floatformat:2 }}%
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-[var(--muted-text-color)] mb-3">
+                                        <i class="far fa-calendar-alt mr-1"></i>
+                                        {{ video.published_at }}
+                                    </p>
+                                    
+                                    {% if chunks %}
+                                        <button class="inline-flex items-center px-3 py-2 border border-yt-red rounded-full text-sm font-medium text-yt-red hover:bg-red-950 focus:outline-none transition-colors"
+                                                onclick="toggleChunks('{{ video.videoId }}')">
+                                            <i class="fas fa-chevron-down mr-2 text-xs"></i>
+                                            Show Relevant Snippets
+                                        </button>
+                                        <div id="chunks-{{ video.videoId }}" class="mt-3 space-y-3 hidden">
+                                            {% for chunk in chunks %}
+                                                {% if chunk.videoId == video.videoId %}
+                                                    <div class="rounded-lg bg-[#2C2C2C] p-4">
+                                                        <div class="flex justify-between items-center mb-2">
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">
+                                                                {{ chunk.score|floatformat:2 }}%
+                                                            </span>
+                                                            <p class="text-xs text-[var(--muted-text-color)]">
+                                                                {{ chunk.start }} - {{ chunk.end }}
+                                                            </p>
+                                                        </div>
+                                                        <p class="text-sm text-white chunk-text"
+                                                           id="chunk-text-{{ video.videoId }}-{{ forloop.counter }}">
+                                                            {{ chunk.text }}
+                                                        </p>
+                                                        {% if chunk.text|length > 150 %}
+                                                            <button onclick="toggleFullText('{{ video.videoId }}', {{ forloop.counter }})"
+                                                                    class="mt-2 text-sm text-yt-red hover:text-red-700 transition-colors">
+                                                                Show More
+                                                            </button>
+                                                        {% endif %}
+                                                        <div class="mt-2">
+                                                            <a href="https://www.youtube.com/watch?v={{ chunk.videoId }}&t={{ chunk.start_in_seconds }}"
+                                                               class="inline-flex items-center text-sm text-yt-red hover:text-red-700 transition-colors"
+                                                               target="_blank">
+                                                                <i class="fas fa-play mr-2"></i>
+                                                                Watch this part
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-sm text-[var(--muted-text-color)]">No relevant snippets found for this video.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <!-- Pagination Controls -->
+                    {% if page_obj.paginator.num_pages > 1 %}
+                        <div class="mt-8 flex justify-center">
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <!-- Previous Page -->
+                                {% if page_obj.has_previous %}
+                                    <form method="post" action="{% url 'app:query_request' %}" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="query_msg" value="{{ query_msg }}">
+                                        <input type="hidden" name="page" value="{{ page_obj.previous_page_number }}">
+                                        <button type="submit" class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-600 bg-[#1E1E1E] text-sm font-medium text-[var(--muted-text-color)] hover:bg-gray-800">
+                                            <i class="fas fa-chevron-left mr-1"></i>
+                                            Previous
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                <!-- Page Numbers -->
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if num == page_obj.number %}
+                                        <span class="relative inline-flex items-center px-4 py-2 border border-yt-red bg-red-950 text-sm font-medium text-yt-red">
+                                            {{ num }}
+                                        </span>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <form method="post" action="{% url 'app:query_request' %}" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="query_msg" value="{{ query_msg }}">
+                                            <input type="hidden" name="page" value="{{ num }}">
+                                            <button type="submit" class="relative inline-flex items-center px-4 py-2 border border-gray-600 bg-[#1E1E1E] text-sm font-medium text-[var(--muted-text-color)] hover:bg-gray-800">
+                                                {{ num }}
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                {% endfor %}
+
+                                <!-- Next Page -->
+                                {% if page_obj.has_next %}
+                                    <form method="post" action="{% url 'app:query_request' %}" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="query_msg" value="{{ query_msg }}">
+                                        <input type="hidden" name="page" value="{{ page_obj.next_page_number }}">
+                                        <button type="submit" class="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-600 bg-[#1E1E1E] text-sm font-medium text-[var(--muted-text-color)] hover:bg-gray-800">
+                                            Next
+                                            <i class="fas fa-chevron-right ml-1"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </nav>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="bg-blue-900 border-l-4 border-blue-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-100">No results found for your query.</p>
+                            <p class="mt-1 text-sm text-blue-100">Try adjusting your search terms.</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightText(text, query) {
+    if (!query) return text;
+    const words = query.split(' ').filter(word => word.length > 0);
+    const pattern = words.map(word => escapeRegExp(word)).join('|');
+    const regex = new RegExp(`(${pattern})`, 'gi');
+    return text.replace(regex, '<mark class="bg-blue-900/40 text-white rounded px-0.5">$1</mark>');
+}
+
+function toggleChannelInfo() {
+    const content = document.getElementById('channel-info-content');
+    const icon = document.getElementById('channel-info-icon');
+    content.classList.toggle('hidden');
+    icon.classList.toggle('rotate-180');
+}
+
+function toggleChunks(videoId) {
+    const chunks = document.getElementById(`chunks-${videoId}`);
+    chunks.classList.toggle('hidden');
+}
+
+function toggleFullText(videoId, index) {
+    const text = document.getElementById(`chunk-text-${videoId}-${index}`);
+    text.classList.toggle('line-clamp-3');
+}
+
+// Add loading state to search form
+document.getElementById('search-form').addEventListener('submit', function(event) {
+    const searchButton = document.getElementById('search-button');
+    const searchIcon = searchButton.querySelector('i');
+    
+    // Disable the button
+    searchButton.disabled = true;
+    
+    // Replace search icon with loading spinner
+    searchIcon.classList.remove('fa-search');
+    searchIcon.classList.add('fa-spinner', 'fa-spin');
+    
+    // Optional: Change button text or style to indicate loading
+    searchButton.classList.add('opacity-50', 'cursor-not-allowed');
+});
+
+// Apply highlighting when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const queryMsg = document.querySelector('input[name="query_msg"]').value;
+    
+    // Highlight video titles
+    document.querySelectorAll('.video-title').forEach(element => {
+        element.innerHTML = highlightText(element.textContent, queryMsg);
+    });
+    
+    // Highlight chunk texts
+    document.querySelectorAll('.chunk-text').forEach(element => {
+        element.innerHTML = highlightText(element.textContent, queryMsg);
+    });
+});
+
+// Handle example searches
+function setExampleSearch(query) {
+    const searchInput = document.querySelector('input[name="query_msg"]');
+    searchInput.value = query;
+    document.getElementById('search-form').submit();
+}
+</script>
+{% endblock content %}

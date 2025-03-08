@@ -13,6 +13,7 @@ from typing import (
     Optional,
 )
 
+import structlog
 import torch
 from asgiref.sync import sync_to_async
 from django.conf import settings
@@ -22,8 +23,8 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_postgres.vectorstores import PGVector
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
-from structlog import get_logger
 
+from app.helpers import convert_seconds_to_timestamp
 from app.models import (
     Video,
     VideoChunk,
@@ -33,7 +34,7 @@ from yt_navigator.settings import DATABASE_URL
 from .retriever import VectorRetriever
 from .utils import get_chunk_id
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class VectorDatabaseService:
@@ -43,7 +44,15 @@ class VectorDatabaseService:
     managing database instances, and handling document operations.
     """
 
-    _ENGINE = create_async_engine(DATABASE_URL)
+    # Create engine as a class attribute but use it to create separate connections
+    _ENGINE = create_async_engine(
+        DATABASE_URL,
+        pool_size=20,  # Increase connection pool size
+        max_overflow=10,  # Allow additional connections when pool is full
+        pool_pre_ping=True,  # Check connection validity before using
+        pool_recycle=3600,  # Recycle connections after 1 hour
+        echo=False,
+    )
 
     def __init__(self):
         """Initialize the VectorDatabaseService.
@@ -56,6 +65,8 @@ class VectorDatabaseService:
 
         self._db_instances: Dict[str, Optional[PGVector]] = {}
         self._bm25_retrievers: Dict[str, Optional[BM25Retriever]] = {}
+
+        logger.info("VectorDatabaseService initialized with connection pool")
 
     @property
     @lru_cache(maxsize=1)  # noqa: B019
@@ -92,7 +103,7 @@ class VectorDatabaseService:
             logger.error(f"Error detecting device: {e}. Defaulting to CPU.")
             return "cpu"
 
-    def get_vstore(self, channel_id: str) -> Optional[PGVector]:
+    async def get_vstore(self, channel_id: str) -> Optional[PGVector]:
         """Get or create a vector store instance for a specific channel.
 
         Args:
@@ -170,9 +181,9 @@ class VectorDatabaseService:
         Raises:
             Exception: If there's an error during the chunk addition process.
         """
-        logger.info("Adding chunks to the database", channel_id=channel_id)
+        logger.info("Adding chunks to the vector database", channel_id=channel_id)
         try:
-            vstore = self.get_vstore(channel_id)
+            vstore = await self.get_vstore(channel_id)
             if not vstore:
                 logger.error("Failed to get vector store for channel", channel_id=channel_id)
                 return
@@ -183,7 +194,7 @@ class VectorDatabaseService:
 
             if non_existing_ids:
                 non_existing_chunks = [c for c in documents if get_chunk_id(c) in non_existing_ids]
-                logger.info("Adding new chunks to the database", new_chunks_count=len(non_existing_chunks))
+                logger.info("Adding new chunks to the vector database", new_chunks_count=len(non_existing_chunks))
                 await vstore.aadd_documents(non_existing_chunks, ids=non_existing_ids)
 
             # Create a function that performs the entire synchronous operation
@@ -215,18 +226,26 @@ class VectorDatabaseService:
 
             video_chunks = [
                 VideoChunk(
-                    video=videos[c.metadata["videoId"]],
+                    video=videos[c.metadata.get("video_id")],
                     text=c.page_content,
-                    start=c.metadata["start"],
-                    end=c.metadata["end"],
+                    start=(
+                        convert_seconds_to_timestamp(c.metadata.get("start_time"))
+                        if c.metadata.get("start_time") is not None
+                        else None
+                    ),
+                    end=(
+                        convert_seconds_to_timestamp(c.metadata.get("start_time") + c.metadata.get("duration"))
+                        if c.metadata.get("start_time") is not None and c.metadata.get("duration") is not None
+                        else None
+                    ),
                 )
                 for c in filtered_chunks
-                if c.metadata.get("videoId") in videos
+                if c.metadata.get("video_id") in videos
             ]
 
             if video_chunks:
                 logger.info("Adding video chunks to the database", video_chunks_count=len(video_chunks))
-                await VideoChunk.abulk_create(video_chunks)
+                await sync_to_async(VideoChunk.objects.bulk_create)(video_chunks)
 
         except Exception as e:
             logger.error("Error adding chunks", error=str(e), traceback=traceback.format_exc())

@@ -4,12 +4,14 @@ This module provides retrieval operations for vector embeddings and keyword-base
 using BM25 algorithm.
 """
 
+import traceback
 from typing import (
     List,
     Optional,
 )
 
 import asyncpg
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents.base import Document
@@ -37,6 +39,9 @@ class VectorRetriever:
         Returns:
             List[str]: List of IDs that don't exist in the database.
 
+        Raises:
+            Exception: If there's an error during the retrieval process.
+
         Note:
             Uses asyncpg for efficient database querying.
         """
@@ -61,11 +66,11 @@ class VectorRetriever:
                     rows = await conn.fetch(raw_query)
                     return [row["input_id"] for row in rows]
         except Exception as e:
-            logger.error("Error getting non-existing IDs", error=str(e))
-            return []
+            logger.error("Error getting non-existing IDs", error=str(e), traceback=traceback.format_exc())
+            raise e
 
     @classmethod
-    def get_bm25_retriever(cls, channel_id: str, **kwargs) -> Optional[BM25Retriever]:
+    async def get_bm25_retriever(cls, channel_id: str, **kwargs) -> Optional[BM25Retriever]:
         """Get a BM25Retriever for the given channel.
 
         Args:
@@ -76,25 +81,37 @@ class VectorRetriever:
             Optional[BM25Retriever]: Configured BM25Retriever instance or None if creation fails.
         """
         try:
-            chunks = list(VideoChunk.objects.filter(video__channel_id=channel_id))
-            documents = [
-                Document(
-                    page_content=chunk.text,
-                    metadata={
-                        **chunk.dict(),
-                        "channel_id": channel_id,
-                        "video_id": chunk.video.id if chunk.video else None,
-                    },
-                )
-                for chunk in chunks
-            ]
+            # Use select_related to prefetch the video relationship to avoid async access issues
+            chunks = await sync_to_async(
+                lambda: list(VideoChunk.objects.filter(video__channel_id=channel_id).select_related("video"))
+            )()
+
+            # Process all chunks in a sync context to avoid async DB access
+            def prepare_documents():
+                return [
+                    Document(
+                        page_content=chunk.text,
+                        metadata={
+                            "id": chunk.id,
+                            "video_id": chunk.video.id if hasattr(chunk, "video") and chunk.video else None,
+                            "start": chunk.start,
+                            "end": chunk.end,
+                            "text": chunk.text,
+                            "channel_id": channel_id,
+                        },
+                    )
+                    for chunk in chunks
+                ]
+
+            # Execute document preparation in sync context
+            documents = await sync_to_async(prepare_documents)()
             return BM25Retriever.from_documents(documents or [])
         except Exception as e:
-            logger.error("Error creating BM25Retriever", error=str(e))
+            logger.error("Error creating BM25Retriever", error=str(e), traceback=traceback.format_exc())
             return None
 
     @classmethod
-    def keyword_search(cls, query: str, channel_id: str, **kwargs) -> List[Document]:
+    async def keyword_search(cls, query: str, channel_id: str, **kwargs) -> List[Document]:
         """Perform keyword-based search using BM25.
 
         Args:
@@ -105,8 +122,8 @@ class VectorRetriever:
         Returns:
             List[Document]: List of matching documents, empty list if retriever not found.
         """
-        retriever = cls.get_bm25_retriever(channel_id, **kwargs)
+        retriever = await cls.get_bm25_retriever(channel_id, **kwargs)
         if not retriever:
             logger.warning("No Keyword retriever found for channel", channel_id=channel_id)
             return []
-        return retriever.invoke(query)
+        return await retriever.ainvoke(query)

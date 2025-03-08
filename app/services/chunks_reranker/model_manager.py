@@ -8,7 +8,7 @@ import torch
 from sentence_transformers import CrossEncoder
 from structlog import get_logger
 
-from .config import config
+from app.services.chunks_reranker import config
 
 logger = get_logger(__name__)
 

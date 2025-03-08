@@ -11,6 +11,8 @@ from .views import (
     get_channel_information,
     home_view,
     profile_view,
+    query,
+    query_page,
     register_view,
     scan_channel,
 )
@@ -30,4 +32,7 @@ urlpatterns = [
     path("get-channel-information/", get_channel_information, name="get_channel_information"),
     path("scan-channel/", scan_channel, name="scan_channel"),
     path("delete-video/<str:video_id>/", delete_video, name="delete_video"),
+    # query page
+    path("query/", query_page, name="query_page"),
+    path("query-request/", query, name="query_request"),
 ]

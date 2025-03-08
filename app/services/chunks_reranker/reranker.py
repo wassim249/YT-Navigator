@@ -10,8 +10,8 @@ from typing import (
 from langchain.docstore.document import Document
 from structlog import get_logger
 
-from .config import config
-from .model_manager import ModelManager
+from app.services.chunks_reranker import config
+from app.services.chunks_reranker.model_manager import ModelManager
 
 logger = get_logger(__name__)
 
