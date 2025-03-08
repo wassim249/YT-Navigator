@@ -1,0 +1,83 @@
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["setuptools==75.8.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yt_navigator"
+dynamic = ["version"]
+description = "A project powered by AI to help you find information on specific YouTube channels."
+readme = "README.md"
+requires-python = ">=3.13.2"
+license = { text = "MIT" }
+dependencies = [
+    "django>=5.1.7",
+    "gunicorn",
+    "python-dotenv",
+    "structlog>=25.1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-django", "black", "isort", "flake8", "ruff"]
+
+[tool.setuptools.dynamic]
+version = {file = "version.txt"}
+
+# [tool.setuptools.package-data]
+# example_pkg = ["*.json"]
+
+
+[tool.pytest.ini_options]
+markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
+DJANGO_SETTINGS_MODULE = "yt_navigator.settings"
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+
+[tool.black]
+line-length = 119
+exclude = "venv|migrations"
+
+[tool.flake8]
+docstring-convention = "all"
+ignore = ["D107", "D212", "E501", "W503", "W605", "D203", "D100"]
+exclude = "venv|migrations"
+max-line-length = 119
+
+# radon
+radon-max-cc = 10
+
+[tool.isort]
+profile = "black"
+multi_line_output = "VERTICAL_HANGING_INDENT"
+force_grid_wrap = 2
+line-length = 119
+skip = ["migrations"]
+
+[tool.pylint."messages control"]
+disable = [
+    "line-too-long",
+    "trailing-whitespace",
+    "missing-function-docstring",
+    "consider-using-f-string",
+    "import-error",
+    "too-few-public-methods",
+    "redefined-outer-name",
+]
+
+[tool.pylint.master]
+ignore = "migrations"
+
+[tool.ruff]
+# Enable flake8-bugbear (`B`) rules.
+select = ["E", "F", "B", "ERA"]
+
+# Never enforce `E501` (line length violations).
+ignore = ["E501", "F401"]
+
+# Avoid trying to fix flake8-bugbear (`B`) violations.
+unfixable = ["B"]
+line-length = 119
+exclude = ["migrations"]
+
+# Ignore `E402` (import violations) in all `__init__.py` files
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["E402"]
