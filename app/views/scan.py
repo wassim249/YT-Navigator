@@ -141,8 +141,9 @@ async def scan_channel(request):
         )
 
         logger.info(
-            f"Channel scan completed successfully for {channel.username}",
+            "Channel scan completed successfully",
             channel_id=channel.id,
+            channel_username=channel.username,
             videos_count=len(videos),
             chunks_count=len(chunks),
         )
@@ -152,9 +153,10 @@ async def scan_channel(request):
 
     except Exception as e:
         logger.error(
-            f"Error during channel scan for {channel.username if 'channel' in locals() and channel else 'unknown'}",
-            error=e,
+            "Error during channel scan",
             channel_id=channel.id if "channel" in locals() and channel else None,
+            error=e,
+            traceback=traceback.format_exc(),
         )
         messages.error(request, f"An error occurred: {str(e)}")
         return redirect("app:home")
