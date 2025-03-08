@@ -16,8 +16,8 @@ class VideoChunk(models.Model):
     """
 
     video = models.ForeignKey("Video", on_delete=models.CASCADE, related_name="chunks")
-    start = models.TimeField()
-    end = models.TimeField()
+    start = models.TimeField(null=True, blank=True)
+    end = models.TimeField(null=True, blank=True)
     text = models.TextField()
 
     def dict(self):
