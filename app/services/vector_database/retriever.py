@@ -5,7 +5,10 @@ using BM25 algorithm.
 """
 
 import asyncio
-from typing import List, Optional
+from typing import (
+    List,
+    Optional,
+)
 
 import asyncpg
 from django.conf import settings

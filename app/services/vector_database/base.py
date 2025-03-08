@@ -5,7 +5,11 @@ managing database instances, and handling document operations.
 """
 
 import json
-from typing import Dict, List, Optional
+from typing import (
+    Dict,
+    List,
+    Optional,
+)
 
 import torch
 from django.conf import settings
@@ -16,7 +20,10 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_postgres.vectorstores import PGVector
 from structlog import get_logger
 
-from app.models import Video, VideoChunk
+from app.models import (
+    Video,
+    VideoChunk,
+)
 from yt_navigator.settings import DATABASE_URL
 
 from .retriever import VectorRetriever
