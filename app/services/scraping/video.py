@@ -93,8 +93,7 @@ class VideoScraper:
                 if not video_metadata:
                     return None, []
 
-                # Assuming transcript_scraper.get_video_transcript is async
-                video_chunks = await transcript_scraper.get_video_transcript(video_metadata)
+                video_chunks = transcript_scraper.get_video_transcript(video_metadata)
 
                 logger.debug(
                     f"Processed video successfully https://www.youtube.com/watch?v={video_metadata['videoId']}",
@@ -159,19 +158,20 @@ class VideoScraper:
             channel_id: Channel ID to associate video with
         """
         try:
-            await sync_to_async(Video.objects.update_or_create)(
-                video_id=video["videoId"],
-                defaults={
-                    "title": video["title"],
-                    "description": video["description"],
-                    "thumbnail": video["thumbnail"],
-                    "published_at": video["published_at"],
-                    "view_count": video["view_count"],
-                    "duration": video["duration"],
-                    "url": video["url"],
-                    "channel_id": channel_id,
-                },
-            )
+
+            @sync_to_async
+            def _update_or_create_video():
+                return Video.objects.update_or_create(
+                    id=video["videoId"],
+                    defaults={
+                        "title": video["title"],
+                        "thumbnail": video["thumbnail"],
+                        "published_at": video["published_at"],
+                        "channel_id": channel_id,
+                    },
+                )
+
+            await _update_or_create_video()
         except IntegrityError:
             # Skip if video already exists
             pass

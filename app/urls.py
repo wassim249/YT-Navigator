@@ -7,10 +7,12 @@ from django.contrib.auth.views import (
 from django.urls import path
 
 from .views import (
+    delete_video,
     get_channel_information,
     home_view,
     profile_view,
     register_view,
+    scan_channel,
 )
 
 app_name = "app"
@@ -26,4 +28,6 @@ urlpatterns = [
     path("profile/", profile_view, name="profile"),
     # scan page
     path("get-channel-information/", get_channel_information, name="get_channel_information"),
+    path("scan-channel/", scan_channel, name="scan_channel"),
+    path("delete-video/<str:video_id>/", delete_video, name="delete_video"),
 ]

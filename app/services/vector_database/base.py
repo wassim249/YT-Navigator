@@ -5,6 +5,7 @@ managing database instances, and handling document operations.
 """
 
 import json
+import traceback
 from typing import (
     Dict,
     List,
@@ -12,12 +13,14 @@ from typing import (
 )
 
 import torch
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.db import connection
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents.base import Document
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_postgres.vectorstores import PGVector
+from sqlalchemy.ext.asyncio import create_async_engine
 from structlog import get_logger
 
 from app.models import (
@@ -45,6 +48,9 @@ class VectorDatabaseService:
         Sets up the device for model inference and initializes the embeddings model
         with the configured settings.
         """
+
+        self._ENGINE = create_async_engine(DATABASE_URL)
+
         # Determine the best available device
         self.device = self._get_optimal_device()
 
@@ -97,10 +103,12 @@ class VectorDatabaseService:
         if channel_id not in self._db_instances:
             try:
                 self._db_instances[channel_id] = PGVector(
-                    connection=DATABASE_URL,
+                    connection=self._ENGINE,
                     collection_name=f"{channel_id}",
                     embeddings=self.embeddings,
+                    create_extension=False,
                     use_jsonb=True,
+                    async_mode=True,
                 )
             except Exception as e:
                 logger.error(f"Failed to create PGVector instance: {str(e)}")
@@ -146,7 +154,7 @@ class VectorDatabaseService:
             logger.error(f"Error deleting video {video_id}: {str(e)}")
             return 0
 
-    def add_chunks(self, chunks: List[dict], channel_id: str) -> None:
+    async def add_chunks(self, chunks: List[dict], channel_id: str) -> None:
         """Add video chunks to the vector database and create VideoChunk records.
 
         Args:
@@ -165,19 +173,39 @@ class VectorDatabaseService:
 
             documents = self.dict_to_langchain_documents(chunks, channel_id=channel_id)
             chunks_ids = [get_chunk_id(c) for c in documents]
-            non_existing_ids = VectorRetriever.get_non_existing_ids(chunks_ids)
+            non_existing_ids = await VectorRetriever.get_non_existing_ids(chunks_ids)
 
             if non_existing_ids:
                 non_existing_chunks = [c for c in documents if get_chunk_id(c) in non_existing_ids]
                 logger.info("Adding new chunks to the database", new_chunks_count=len(non_existing_chunks))
-                vstore.add_documents(non_existing_chunks, ids=non_existing_ids)
+                await vstore.aadd_documents(non_existing_chunks, ids=non_existing_ids)
 
-            existing_texts = set(
-                VideoChunk.objects.filter(text__in=[c.page_content for c in documents]).values_list("text", flat=True)
-            )
+            # Create a function that performs the entire synchronous operation
+            async def get_existing_texts():
+                @sync_to_async
+                def _get_existing_texts():
+                    return set(
+                        VideoChunk.objects.filter(text__in=[c.page_content for c in documents]).values_list(
+                            "text", flat=True
+                        )
+                    )
+
+                return await _get_existing_texts()
+
+            # Get existing texts using the properly wrapped function
+            existing_texts = await get_existing_texts()
             filtered_chunks = [c for c in documents if c.page_content not in existing_texts]
 
-            videos = {video.id: video for video in Video.objects.filter(channel_id=channel_id)}
+            # Create a function that performs the entire synchronous operation for videos
+            async def get_videos():
+                @sync_to_async
+                def _get_videos():
+                    return {video.id: video for video in Video.objects.filter(channel_id=channel_id)}
+
+                return await _get_videos()
+
+            # Get videos using the properly wrapped function
+            videos = await get_videos()
 
             video_chunks = [
                 VideoChunk(
@@ -192,8 +220,8 @@ class VectorDatabaseService:
 
             if video_chunks:
                 logger.info("Adding video chunks to the database", video_chunks_count=len(video_chunks))
-                VideoChunk.objects.bulk_create(video_chunks)
+                await VideoChunk.abulk_create(video_chunks)
 
         except Exception as e:
-            logger.error("Error adding chunks", error=str(e))
+            logger.error("Error adding chunks", error=str(e), traceback=traceback.format_exc())
             raise

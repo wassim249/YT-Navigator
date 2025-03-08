@@ -16,7 +16,7 @@ class Video(models.Model):
 
     id = models.CharField(max_length=100, primary_key=True)
     title = models.CharField(max_length=100)
-    thumbnail = models.URLField()
+    thumbnail = models.URLField(default="https://i.ytimg.com/vi/default/default.jpg")
     published_at = models.DateTimeField()
     channel = models.ForeignKey("Channel", on_delete=models.CASCADE)
 

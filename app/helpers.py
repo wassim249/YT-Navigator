@@ -5,6 +5,10 @@ from datetime import (
     timedelta,
 )
 
+import structlog
+
+logger = structlog.get_logger(__name__)
+
 
 def get_exact_time(relative_time: str) -> str | None:
     """Convert relative time (e.g., '3 months ago') to an exact date and time."""
@@ -43,7 +47,7 @@ def get_exact_time(relative_time: str) -> str | None:
 
         return str(exact_time.strftime("%Y-%m-%d %H:%M"))
     except Exception as e:
-        print(f"Error processing relative time '{relative_time}': {e}")
+        logger.error("Error processing relative time", error=str(e), relative_time=relative_time)
         return None
 
 

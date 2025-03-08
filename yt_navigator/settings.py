@@ -88,6 +88,8 @@ DATABASES = {
     }
 }
 
+DATABASE_URL = f"postgresql+asyncpg://{DATABASES['default']['USER']}:{DATABASES['default']['PASSWORD']}@{DATABASES['default']['HOST']}:{DATABASES['default']['PORT']}/{DATABASES['default']['NAME']}"
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -192,3 +194,20 @@ LOGGING = {
         },
     },
 }
+
+# Model selection and sequence length
+RERANKER_MODEL_NAME = os.getenv("RERANKER_MODEL_NAME", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+RERANKER_MAX_SEQUENCE_LENGTH = os.getenv("RERANKER_MAX_SEQUENCE_LENGTH", 512)
+
+# Batch processing settings
+RERANKER_DEFAULT_BATCH_SIZE = os.getenv("RERANKER_DEFAULT_BATCH_SIZE", 32)
+RERANKER_MAX_BATCH_SIZE = os.getenv("RERANKER_MAX_BATCH_SIZE", 64)
+
+# Performance optimization settings
+RERANKER_ENABLE_CUDA_OPTIMIZATIONS = os.getenv("RERANKER_ENABLE_CUDA_OPTIMIZATIONS", True)
+RERANKER_ENABLE_TF32 = os.getenv("RERANKER_ENABLE_TF32", True)
+RERANKER_CUDA_BENCHMARK = os.getenv("RERANKER_CUDA_BENCHMARK", True)
+
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
+EMBEDDING_BATCH_SIZE = os.getenv("EMBEDDING_BATCH_SIZE", 32)
+EMBEDDING_NORMALIZE_EMBEDDINGS = os.getenv("EMBEDDING_NORMALIZE_EMBEDDINGS", True)

@@ -78,22 +78,22 @@ class ChannelScraper:
 
             # Create or update channel in database
             channel, created = await sync_to_async(Channel.objects.get_or_create)(
-                channel_id=channel_data["id"],
+                id=channel_data["id"],
                 defaults={
                     "name": channel_data["name"],
+                    "username": channel_username,
                     "description": channel_data["description"],
                     "url": channel_data["url"],
-                    "thumbnail": channel_data["thumbnail"],
-                    "last_scraped": timezone.now(),
+                    "profile_image_url": channel_data["profile_image_url"],
                 },
             )
 
             if not created:
                 channel.name = channel_data["name"]
+                channel.username = channel_username
                 channel.description = channel_data["description"]
                 channel.url = channel_data["url"]
-                channel.thumbnail = channel_data["thumbnail"]
-                channel.last_scraped = timezone.now()
+                channel.profile_image_url = channel_data["profile_image_url"]
                 await sync_to_async(channel.save)()
 
             logger.info("Channel data processed", channel_id=channel_data["id"], channel_name=channel.name)
@@ -102,7 +102,14 @@ class ChannelScraper:
         except httpx.RequestError as e:
             logger.error("YouTube API request failed", channel_link=channel_link, error=e)
         except Exception as e:
-            logger.error("Unexpected error in get_channel_data", channel_link=channel_link, error=e)
+            import traceback
+
+            logger.error(
+                "Unexpected error in get_channel_data",
+                channel_link=channel_link,
+                error=str(e),
+                traceback=traceback.format_exc(),
+            )
         finally:
             # Close client if not in context manager
             if self.client and not hasattr(self, "__aenter__"):
@@ -119,7 +126,13 @@ class ChannelScraper:
             Optional[Dict]: Dictionary with channel metadata if successful, None otherwise
         """
         try:
-            metadata = {"name": "Unknown Channel", "description": "N/A", "url": "N/A", "thumbnail": "N/A", "id": "N/A"}
+            metadata = {
+                "name": "Unknown Channel",
+                "description": "N/A",
+                "url": "N/A",
+                "profile_image_url": "N/A",
+                "id": "N/A",
+            }
 
             # Extract channel name
             channel_name = soup.find("meta", property="og:title")
@@ -136,6 +149,12 @@ class ChannelScraper:
             if channel_url:
                 metadata["url"] = channel_url["content"]
 
+            # Extract channel profile image URL
+            metadata["profile_image_url"] = (
+                soup.find("meta", property="og:image")["content"] if soup.find("meta", property="og:image") else "N/A"
+            )
+
+            # Extract channel ID
             if "youtube.com/channel/" in metadata["url"]:
                 metadata["id"] = metadata["url"].split("https://www.youtube.com/channel/")[1]
 

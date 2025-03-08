@@ -4,7 +4,9 @@ This module provides a comprehensive scraping service that combines channel, vid
 and transcript scraping components to extract data from YouTube channels.
 """
 
+import asyncio
 import concurrent.futures
+from traceback import format_exc
 from typing import (
     Dict,
     List,
@@ -122,9 +124,21 @@ class YoutubeScraper(BaseYoutubeScraper):
             all_chunks = []
             chunk_size = max(1, len(scrape_results) // self.workers_num)
 
+            # Create a wrapper function to handle the async method
+            def process_chunk_wrapper(chunk):
+                # Use asyncio.run to properly await the coroutine
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(
+                        self.video_scraper.process_video_chunk(chunk, self.transcript_scraper)
+                    )
+                finally:
+                    loop.close()
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.workers_num) as executor:
                 futures = [
-                    executor.submit(self.video_scraper.process_video_chunk, chunk, self.transcript_scraper)
+                    executor.submit(process_chunk_wrapper, chunk)
                     for chunk in chunk_generator(scrape_results, chunk_size)
                 ]
 
@@ -149,5 +163,5 @@ class YoutubeScraper(BaseYoutubeScraper):
             return all_videos, all_chunks
 
         except Exception as e:
-            logger.error("Channel scrape failed", channel_username=channel_username, error=e)
+            logger.error("Channel scrape failed", channel_username=channel_username, error=e, traceback=format_exc())
             return [], []

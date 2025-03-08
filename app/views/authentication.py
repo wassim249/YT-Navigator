@@ -18,7 +18,6 @@ def register_view(request):
     """Register view."""
     if request.method == "POST":
         form = RegistrationForm(request.POST)
-        print(request.POST)  # Debugging form values
 
         if form.is_valid():
             form.save()
@@ -30,9 +29,6 @@ def register_view(request):
             login(request, user)
             return redirect("app:home")
         else:
-            for field in form:
-                for error in field.errors:
-                    print(f"Error in {field.name}: {error}")  # Check errors in each field
             for field in form:
                 for error in field.errors:
                     messages.error(request, f"{field.label}: {error}")

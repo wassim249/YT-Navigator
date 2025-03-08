@@ -4,7 +4,6 @@ This module provides retrieval operations for vector embeddings and keyword-base
 using BM25 algorithm.
 """
 
-import asyncio
 from typing import (
     List,
     Optional,
@@ -29,7 +28,7 @@ class VectorRetriever:
     """
 
     @staticmethod
-    def get_non_existing_ids(ids: List[str]) -> List[str]:
+    async def get_non_existing_ids(ids: List[str]) -> List[str]:
         """Retrieve IDs that do not exist in the database.
 
         Args:
@@ -45,27 +44,22 @@ class VectorRetriever:
             return []
 
         try:
-            # Use a synchronous method to create a connection pool
-            async def _get_non_existing_ids():
-                async with asyncpg.create_pool(
-                    user=settings.DATABASES["default"]["USER"],
-                    password=settings.DATABASES["default"]["PASSWORD"],
-                    database=settings.DATABASES["default"]["NAME"],
-                    host=settings.DATABASES["default"]["HOST"],
-                    port=settings.DATABASES["default"]["PORT"],
-                ) as pool:
-                    async with pool.acquire() as conn:
-                        values_clause = ", ".join(f"('{id}')" for id in ids)
-                        raw_query = f"""
-                            SELECT input_id
-                            FROM (VALUES {values_clause}) AS input_ids(input_id)
-                            WHERE input_id NOT IN (SELECT id FROM langchain_pg_embedding);
-                        """
-                        rows = await conn.fetch(raw_query)
-                        return [row["input_id"] for row in rows]
-
-            # Use asyncio.run to execute the async function synchronously
-            return asyncio.run(_get_non_existing_ids())
+            async with asyncpg.create_pool(
+                user=settings.DATABASES["default"]["USER"],
+                password=settings.DATABASES["default"]["PASSWORD"],
+                database=settings.DATABASES["default"]["NAME"],
+                host=settings.DATABASES["default"]["HOST"],
+                port=settings.DATABASES["default"]["PORT"],
+            ) as pool:
+                async with pool.acquire() as conn:
+                    values_clause = ", ".join(f"('{id}')" for id in ids)
+                    raw_query = f"""
+                        SELECT input_id
+                        FROM (VALUES {values_clause}) AS input_ids(input_id)
+                        WHERE input_id NOT IN (SELECT id FROM langchain_pg_embedding);
+                    """
+                    rows = await conn.fetch(raw_query)
+                    return [row["input_id"] for row in rows]
         except Exception as e:
             logger.error("Error getting non-existing IDs", error=str(e))
             return []
