@@ -15,6 +15,10 @@ dependencies = [
     "gunicorn",
     "python-dotenv",
     "structlog>=25.1.0",
+    "youtube-transcript-api>=0.6.3",
+    "scrapetube>=2.5.1",
+    "bs4>=4.13.3",
+    "httpx>=0.28.1",
 ]
 
 [project.optional-dependencies]
