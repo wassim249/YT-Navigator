@@ -16,6 +16,7 @@ dependencies = [
     "psycopg2-binary>=2.9.10",
     "asyncpg>=0.30.0",
     "sentence-transformers>=3.4.1",
+    "rank_bm25>=0.2.2",
     "python-dotenv",
     "structlog>=25.1.0",
     "youtube-transcript-api>=0.6.3",
