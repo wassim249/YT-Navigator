@@ -55,7 +55,6 @@ async def query(request: HttpRequest) -> HttpResponse:
         return redirect("app:query_page")
 
     try:
-
         results: QueryVectorStoreResponse = await vector_database_tools.similarity_videos_search(
             query_msg, channel_id=channel_id
         )
