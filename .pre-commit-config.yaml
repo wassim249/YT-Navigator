@@ -36,8 +36,6 @@ repos:
               ^example/large/file.csv|
               ^example/large/sklearn-model.pkl
           )
-      # Sort requirements in requirements.txt files.
-      - id: requirements-txt-fixer
       # Prevent addition of new git submodules.
       - id: forbid-new-submodules
       # Prevent committing directly to trunk (since Bitbucket wants us to pay for this feature)
