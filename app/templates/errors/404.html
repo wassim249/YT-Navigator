@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found{% endblock title %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-yt-black text-white">
+    <div class="text-center">
+        <h1 class="text-6xl font-bold text-yt-red mb-4">404</h1>
+        <p class="text-2xl mb-6">Page Not Found</p>
+        <p class="text-lg mb-8">The page you are looking for might have been removed or doesn't exist.</p>
+        <a href="{% url 'home' %}" class="bg-yt-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition duration-300">
+            Return to Home
+        </a>
+    </div>
+</div>
+{% endblock content %} 
