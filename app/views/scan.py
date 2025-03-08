@@ -1,10 +1,12 @@
 """Views for the scan feature."""
 
+import traceback
 from functools import lru_cache
 
 from asgiref.sync import sync_to_async
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.shortcuts import redirect
 from django.views.decorators.http import require_http_methods
 from structlog import get_logger
 
@@ -96,12 +98,15 @@ async def scan_channel(request):
         request: The HTTP request object containing optional videos_limit parameter.
 
     Returns:
-        JsonResponse: A JSON response with the scan results or an error message.
+        HttpResponseRedirect: A redirect to the home page with a success or error message.
 
     Raises:
         Exception: For any errors during the scanning process.
     """
     try:
+        from django.contrib import messages
+        from django.shortcuts import redirect
+
         channel = await sync_to_async(lambda: request.user.channel)()
 
         videos_limit = request.POST.get("videos_limit", 10)
@@ -109,7 +114,8 @@ async def scan_channel(request):
 
         if not channel:
             logger.warning("No channel found for user", user_id=request.user.id)
-            return JsonResponse({"error": "No channel found"}, status=404)
+            messages.error(request, "No channel found")
+            return redirect("app:home")
 
         logger.info(
             "Starting channel scan",
@@ -141,13 +147,17 @@ async def scan_channel(request):
             chunks_count=len(chunks),
         )
 
-        return JsonResponse({"status": "success", "videos_count": len(videos), "chunks_count": len(chunks)})
+        messages.success(request, f"Successfully scanned {len(videos)} videos and extracted {len(chunks)} chunks.")
+        return redirect("app:home")
 
     except Exception as e:
         logger.error(
-            f"Error during channel scan for {channel.username}", error=e, channel_id=channel.id if channel else None
+            f"Error during channel scan for {channel.username if 'channel' in locals() and channel else 'unknown'}",
+            error=e,
+            channel_id=channel.id if "channel" in locals() and channel else None,
         )
-        return JsonResponse({"error": str(e)}, status=500)
+        messages.error(request, f"An error occurred: {str(e)}")
+        return redirect("app:home")
 
 
 @login_required
@@ -160,7 +170,7 @@ async def delete_video(request, video_id: str):
         video_id: The ID of the video to delete.
 
     Returns:
-        JsonResponse: A JSON response indicating success or failure.
+        HttpResponseRedirect: A redirect to the videos page on success or error.
 
     Raises:
         Exception: For any errors during the deletion process.
@@ -168,20 +178,24 @@ async def delete_video(request, video_id: str):
     try:
         if not video_id:
             logger.error("No video ID provided")
-            return JsonResponse({"error": "No video ID provided."}, status=400)
+            messages.error(request, "No video ID provided.")
+            return redirect("app:home")
 
         # Pass the parent span to maintain the trace
-        deleted = await sync_to_async(get_vector_database().delete_video)(
+        deleted = await get_vector_database().delete_video(
             video_id,
         )
 
         if deleted:
             logger.info("Video deleted successfully", video_id=video_id)
-            return JsonResponse({"status": "success"})
+            messages.success(request, "Video deleted successfully.")
+            return redirect("app:home")
         else:
             logger.error("Failed to delete video", video_id=video_id)
-            return JsonResponse({"error": "Failed to delete video."}, status=500)
+            messages.error(request, "Failed to delete video.")
+            return redirect("app:home")
 
     except Exception as e:
-        logger.error("Error deleting video", video_id=video_id, error=e)
-        return JsonResponse({"error": str(e)}, status=500)
+        logger.error("Error deleting video", video_id=video_id, error=e, traceback=traceback.format_exc())
+        messages.error(request, f"Error: {str(e)}")
+        return redirect("app:home")
