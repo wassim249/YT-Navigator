@@ -169,7 +169,7 @@
                                 {% for video in videos %}
                                     <div class="group relative rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200 bg-[#2C2C2C]">
                                         <div class="aspect-w-16 aspect-h-9">
-                                            <a href="https://www.youtube.com/watch?v={{ video.video_id }}" target="_blank">
+                                            <a href="https://www.youtube.com/watch?v={{ video.id }}" target="_blank">
                                                 <img src="{{ video.thumbnail }}" alt="{{ video.title }}"
                                                      class="w-full h-full object-cover" width="320" height="180">
                                             </a>
@@ -178,7 +178,7 @@
                                             <div class="flex justify-between items-start">
                                                 <div class="flex-1 min-w-0">
                                                     <h4 class="text-sm font-medium text-white line-clamp-2">
-                                                        <a href="https://www.youtube.com/watch?v={{ video.video_id }}" target="_blank">
+                                                        <a href="https://www.youtube.com/watch?v={{ video.id }}" target="_blank">
                                                             {{ video.title }}
                                                         </a>
                                                     </h4>
