@@ -6,6 +6,7 @@ managing database instances, and handling document operations.
 
 import json
 import traceback
+from functools import lru_cache
 from typing import (
     Dict,
     List,
@@ -15,11 +16,11 @@ from typing import (
 import torch
 from asgiref.sync import sync_to_async
 from django.conf import settings
-from django.db import connection
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents.base import Document
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_postgres.vectorstores import PGVector
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 from structlog import get_logger
 
@@ -41,31 +42,27 @@ class VectorDatabaseService:
     This service handles vector storage operations, including initialization of embeddings,
     managing database instances, and handling document operations.
     """
-
+    _ENGINE = create_async_engine(DATABASE_URL)
     def __init__(self):
         """Initialize the VectorDatabaseService.
 
         Sets up the device for model inference and initializes the embeddings model
         with the configured settings.
         """
-        self._ENGINE = create_async_engine(DATABASE_URL)
 
         # Determine the best available device
         self.device = self._get_optimal_device()
 
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name=settings.EMBEDDING_MODEL,
-            model_kwargs={
-                "device": self.device,
-                "trust_remote_code": True,
-            },
-            encode_kwargs={
-                "normalize_embeddings": settings.EMBEDDING_NORMALIZE_EMBEDDINGS,
-                "batch_size": settings.EMBEDDING_BATCH_SIZE,
-            },
-        )
         self._db_instances: Dict[str, Optional[PGVector]] = {}
         self._bm25_retrievers: Dict[str, Optional[BM25Retriever]] = {}
+
+    @property
+    @lru_cache(maxsize=1)
+    def embeddings(self):
+        return HuggingFaceEmbeddings(
+            model_name=settings.EMBEDDING_MODEL,
+            model_kwargs={"device": self.device},
+        )
 
     def _get_optimal_device(self) -> str:
         """Determine the optimal device for model inference.
@@ -132,8 +129,7 @@ class VectorDatabaseService:
             for chunk in data
         ]
 
-    @staticmethod
-    def delete_video(video_id: str) -> int:
+    async def delete_video(self, video_id: str) -> int:
         """Delete a video and its associated vector embeddings.
 
         Args:
@@ -143,14 +139,19 @@ class VectorDatabaseService:
             int: Number of deleted records (0 if deletion fails).
         """
         try:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """DELETE FROM langchain_pg_embedding WHERE cmetadata @> %s""",
-                    [json.dumps({"videoId": video_id})],
+            async with self._ENGINE.begin() as conn:
+                await conn.execute(
+                    text("DELETE FROM langchain_pg_embedding WHERE cmetadata @> :metadata"),
+                    {"metadata": json.dumps({"videoId": video_id})},
                 )
-            return Video.objects.filter(id=video_id).delete()[0]
+
+            @sync_to_async
+            def delete_video_objects():
+                return Video.objects.filter(id=video_id).delete()[0]
+
+            return await delete_video_objects()
         except Exception as e:
-            logger.error(f"Error deleting video {video_id}: {str(e)}")
+            logger.error(f"Error deleting video {video_id}", error=str(e), traceback=traceback.format_exc())
             return 0
 
     async def add_chunks(self, chunks: List[dict], channel_id: str) -> None:
