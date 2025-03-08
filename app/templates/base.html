@@ -67,7 +67,7 @@
           <!-- User Menu -->
           <div class="flex items-center space-x-4">
             {% if user.is_authenticated %}
-              <a href="#" class="text-muted-text-color hover:text-white transition-colors">
+              <a href="{% url 'app:profile' %}" class="text-muted-text-color hover:text-white transition-colors">
                 {{ user.username }}
               </a>
               <form id="logout-form" method="post" action="{% url 'app:logout' %}">
