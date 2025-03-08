@@ -1,0 +1,143 @@
+{% extends "registration/base.html" %}
+
+{% block title %}Login{% endblock title %}
+
+{% block content %}
+<div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Promotional Section -->
+    <div class="hidden md:flex flex-col justify-center space-y-6 p-8 bg-[#1E1E1E] rounded-lg">
+        <div class="space-y-4 text-center">
+            <div class="flex justify-center mb-6">
+                <div class="w-32 h-32 bg-gradient-to-r from-yt-red to-red-800 rounded-full flex items-center justify-center animate-pulse">
+                    <i class="fab fa-youtube text-6xl text-white"></i>
+                </div>
+            </div>
+            <h2 class="text-3xl font-bold text-white animate-fadeIn">
+                Unlock the Power of AI
+            </h2>
+            <p class="text-[var(--muted-text-color)] text-lg animate-slideIn">
+                Chat with your favorite YouTube channels using cutting-edge AI technology
+            </p>
+        </div>
+        
+        <div class="space-y-4">
+            <div class="flex items-center space-x-3 justify-center animate-bounceIn">
+                <i class="fas fa-robot text-yt-red text-2xl"></i>
+                <span class="text-white">Intelligent Content Analysis</span>
+            </div>
+            <div class="flex items-center space-x-3 justify-center animate-bounceIn delay-100">
+                <i class="fas fa-search text-yt-red text-2xl"></i>
+                <span class="text-white">Advanced Video Search</span>
+            </div>
+            <div class="flex items-center space-x-3 justify-center animate-bounceIn delay-200">
+                <i class="fas fa-comment-dots text-yt-red text-2xl"></i>
+                <span class="text-white">Interactive AI Chatbot</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Form -->
+    <div class="w-full max-w-md mx-auto">
+        <div class="bg-[#1E1E1E] py-8 px-6 shadow-lg rounded-lg animate-slideInRight">
+            <div class="text-center mb-8">
+                <i class="fab fa-youtube text-yt-red text-5xl mb-4"></i>
+                <h2 class="text-3xl font-bold text-white">Sign in</h2>
+                <p class="mt-2 text-[var(--muted-text-color)]">to continue to YT Navigator</p>
+            </div>
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Username Field -->
+                <div class="space-y-2">
+                    <label for="id_username" class="block text-sm font-medium text-white">Username</label>
+                    <input type="text" name="username" id="id_username"
+                           class="appearance-none block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-[#2C2C2C] text-white placeholder-[var(--muted-text-color)] focus:outline-none focus:ring-2 focus:ring-yt-red focus:border-transparent"
+                           value="{{ form.username.value|default:"" }}">
+                    {% if form.username.errors %}
+                        <div class="text-sm text-yt-red mt-1">
+                            {% for error in form.username.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Password Field -->
+                <div class="space-y-2">
+                    <label for="id_password" class="block text-sm font-medium text-white">Password</label>
+                    <input type="password" name="password" id="id_password"
+                           class="appearance-none block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-[#2C2C2C] text-white placeholder-[var(--muted-text-color)] focus:outline-none focus:ring-2 focus:ring-yt-red focus:border-transparent"
+                           value="{{ form.password.value|default:"" }}">
+                    {% if form.password.errors %}
+                        <div class="text-sm text-yt-red mt-1">
+                            {% for error in form.password.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yt-red hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yt-red transition-colors">
+                    Sign in
+                </button>
+            </form>
+
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-600"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-[#1E1E1E] text-[var(--muted-text-color)]">Don't have an account?</span>
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <a href="{% url 'app:register' %}" 
+                       class="font-medium text-yt-red hover:text-red-600 transition-colors">
+                        Create account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Animations -->
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes bounceIn {
+        0% { opacity: 0; transform: scale(0.3); }
+        50% { opacity: 1; transform: scale(1.05); }
+        70% { transform: scale(0.9); }
+        100% { transform: scale(1); }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 1s ease-out;
+    }
+    .animate-slideIn {
+        animation: slideIn 1s ease-out;
+    }
+    .animate-slideInRight {
+        animation: slideInRight 1s ease-out;
+    }
+    .animate-bounceIn {
+        animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+</style>
+{% endblock content %}

@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="YT Navigator - Intelligent YouTube Channel Analysis and Interaction Platform">
+    <meta name="keywords" content="YouTube, AI, channel analysis, video search, chatbot, content exploration">
+    <title>{% block title %}Main{% endblock title %} | YT Navigator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/29b4e38e6e.js" crossorigin="anonymous"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'yt-red': '#FF0000',
+              'yt-black': '#282828',
+              'yt-gray': '#606060',
+              'yt-light': '#F9F9F9'
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+      :root {
+        --bg-color: #121212;
+        --text-color: #e1e1e1; 
+        --muted-text-color: #b3b3b3;
+        --accent-color: #ff0000;
+      }
+
+      body {
+        font-family: 'Roboto', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+      }
+    </style>
+    <link rel="icon" type="image/x-icon" href="{% static 'images/youtube-favicon.ico' %}">
+    {% block extra_head %}
+    {% endblock extra_head %}
+  </head>
+  <body class="min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-yt-black shadow-md fixed w-full top-0 z-50">
+      <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center h-14">
+          <!-- Logo and Brand -->
+          <div class="flex items-center space-x-4">
+            <a href="{% url 'app:home' %}" class="flex items-center space-x-2">
+              <i class="fab fa-youtube text-yt-red text-3xl"></i>
+              <span class="font-bold text-xl text-white">YT Navigator</span>
+            </a>
+          </div>
+
+          <!-- Navigation Links -->
+          <div class="hidden md:flex items-center space-x-6">
+            <a href="{% url 'app:home' %}" class="text-muted-text-color hover:text-white transition-colors">Home</a>
+            <a href="#" class="text-muted-text-color hover:text-white transition-colors">Query</a>
+            <a href="#" class="text-muted-text-color hover:text-white transition-colors">Chatbot</a>
+          </div>
+
+          <!-- User Menu -->
+          <div class="flex items-center space-x-4">
+            {% if user.is_authenticated %}
+              <a href="#" class="text-muted-text-color hover:text-white transition-colors">
+                {{ user.username }}
+              </a>
+              <form id="logout-form" method="post" action="{% url 'app:logout' %}">
+                {% csrf_token %}
+                <button type="submit" id="logout-btn" 
+                        class="bg-accent-color text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors">
+                  Logout 
+                </button>
+              </form>
+            {% else %}
+              <a href="{% url 'app:login' %}" class="text-muted-text-color hover:text-white transition-colors">Login</a>
+              <a href="{% url 'app:register' %}" class="bg-accent-color text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors">
+                Sign Up
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 pt-20 pb-8">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="mb-4 p-4 rounded-md {% if message.tags == 'error' %}bg-red-800 text-red-100{% else %}bg-green-800 text-green-100{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+      
+      {% block content %}
+      {% endblock content %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-yt-black border-t border-yt-gray mt-auto">
+      <div class="container mx-auto px-4 py-6">
+        <div class="text-center text-muted-text-color">
+          <p>© {% now "Y" %} YT Navigator. All rights reserved.</p>
+          <p class="text-sm mt-2">Developed by Wassim EL BAKKOURI</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Add logout script at the end of the body -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutForm = document.getElementById('logout-form');
+            if (logoutForm) {
+                logoutForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    // Add loading state to logout button
+                    const logoutBtn = document.getElementById('logout-btn');
+                    logoutBtn.disabled = true;
+                    logoutBtn.innerHTML = 'Logging out...';
+                    logoutBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                    // Submit the form
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: new FormData(this),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        // Redirect to login page or home page
+                        window.location.href = "{% url 'app:login' %}";
+                    })
+                    .catch(error => {
+                        console.error('Logout error:', error);
+                        logoutBtn.disabled = false;
+                        logoutBtn.innerHTML = 'Logout';
+                        logoutBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        alert('Logout failed. Please try again.');
+                    });
+                });
+            }
+        });
+    </script>
+  </body>
+</html>
