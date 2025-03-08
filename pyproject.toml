@@ -65,7 +65,7 @@ radon-max-cc = 10
 profile = "black"
 multi_line_output = "VERTICAL_HANGING_INDENT"
 force_grid_wrap = 2
-line-length = 119
+line_length = 119
 skip = ["migrations"]
 
 [tool.pylint."messages control"]
@@ -83,20 +83,20 @@ disable = [
 ignore = "migrations"
 
 [tool.ruff]
-# Enable flake8-bugbear (`B`) rules and docstring (`D`) rules
-select = ["E", "F", "B", "ERA", "D"]
-
-# Never enforce `E501` (line length violations).
-ignore = ["E501", "F401", "D203", "D213"]
-
-# Avoid trying to fix flake8-bugbear (`B`) violations.
-unfixable = ["B"]
 line-length = 119
 exclude = ["migrations"]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint]
+# Enable flake8-bugbear (`B`) rules and docstring (`D`) rules
+select = ["E", "F", "B", "ERA", "D"]
+# Never enforce `E501` (line length violations).
+ignore = ["E501", "F401", "D203", "D213"]
+# Avoid trying to fix flake8-bugbear (`B`) violations.
+unfixable = ["B"]
+
+[tool.ruff.lint.pydocstyle]
 convention = "google"
 
 # Ignore `E402` (import violations) in all `__init__.py` files
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
