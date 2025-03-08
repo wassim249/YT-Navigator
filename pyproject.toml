@@ -14,6 +14,8 @@ dependencies = [
     "django>=5.1.7",
     "gunicorn",
     "psycopg2-binary>=2.9.10",
+    "asyncpg>=0.30.0",
+    "sentence-transformers>=3.4.1",
     "python-dotenv",
     "structlog>=25.1.0",
     "youtube-transcript-api>=0.6.3",
@@ -66,7 +68,7 @@ profile = "black"
 multi_line_output = "VERTICAL_HANGING_INDENT"
 force_grid_wrap = 2
 line_length = 119
-skip = ["migrations"]
+skip = ["migrations", "venv"]
 
 [tool.pylint."messages control"]
 disable = [
