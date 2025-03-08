@@ -42,14 +42,15 @@ class VectorDatabaseService:
     This service handles vector storage operations, including initialization of embeddings,
     managing database instances, and handling document operations.
     """
+
     _ENGINE = create_async_engine(DATABASE_URL)
+
     def __init__(self):
         """Initialize the VectorDatabaseService.
 
         Sets up the device for model inference and initializes the embeddings model
         with the configured settings.
         """
-
         # Determine the best available device
         self.device = self._get_optimal_device()
 
@@ -57,8 +58,13 @@ class VectorDatabaseService:
         self._bm25_retrievers: Dict[str, Optional[BM25Retriever]] = {}
 
     @property
-    @lru_cache(maxsize=1)
+    @lru_cache(maxsize=1)  # noqa: B019
     def embeddings(self):
+        """Get the embeddings model.
+
+        Returns:
+            HuggingFaceEmbeddings: The embeddings model.
+        """
         return HuggingFaceEmbeddings(
             model_name=settings.EMBEDDING_MODEL,
             model_kwargs={"device": self.device},
