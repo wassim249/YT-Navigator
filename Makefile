@@ -39,3 +39,13 @@ install-hooks:
 
 run-hooks:
 	pre-commit run --all-files
+
+
+clean:
+	find . -name "*.pyc" -delete
+	find . -name "__pycache__" -delete
+	find . -name ".DS_Store" -delete
+	find . -name ".pytest_cache" -delete
+	find . -name ".ruff_cache" -delete
+	find . -name ".mypy_cache" -delete
+	find . -name "migrations" -delete
