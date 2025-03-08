@@ -6,13 +6,18 @@ from datetime import (
 )
 
 import structlog
+from django.utils import timezone
 
 logger = structlog.get_logger(__name__)
 
 
-def get_exact_time(relative_time: str) -> str | None:
-    """Convert relative time (e.g., '3 months ago') to an exact date and time."""
-    current_time = datetime.now()
+def get_exact_time(relative_time: str) -> datetime | None:
+    """Convert relative time (e.g., '3 months ago') to an exact date and time.
+
+    Returns:
+        A timezone-aware datetime object.
+    """
+    current_time = timezone.now()
 
     # Parsing relative time
     time_units = {
@@ -45,7 +50,8 @@ def get_exact_time(relative_time: str) -> str | None:
         else:
             raise ValueError(f"Unrecognized time unit: {unit}")
 
-        return str(exact_time.strftime("%Y-%m-%d %H:%M"))
+        # Return timezone-aware datetime object
+        return exact_time
     except Exception as e:
         logger.error("Error processing relative time", error=str(e), relative_time=relative_time)
         return None
