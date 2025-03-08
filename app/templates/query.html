@@ -107,7 +107,7 @@
                         <div class="bg-[#1E1E1E] shadow-sm rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200">
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div class="md:col-span-1">
-                                    <a href="https://www.youtube.com/watch?v={{ video.videoId }}" target="_blank" 
+                                    <a href="https://www.youtube.com/watch?v={{ video.videoId }}" target="_blank"
                                        class="block aspect-w-16 aspect-h-9">
                                         <img src="{{ video.thumbnail }}" alt="{{ video.title }}"
                                              class="w-full h-full object-cover" width="320" height="180"/>
@@ -127,7 +127,7 @@
                                         <i class="far fa-calendar-alt mr-1"></i>
                                         {{ video.published_at }}
                                     </p>
-                                    
+
                                     {% if chunks %}
                                         <button class="inline-flex items-center px-3 py-2 border border-yt-red rounded-full text-sm font-medium text-yt-red hover:bg-red-950 focus:outline-none transition-colors"
                                                 onclick="toggleChunks('{{ video.videoId }}')">
@@ -278,14 +278,14 @@ function toggleFullText(videoId, index) {
 document.getElementById('search-form').addEventListener('submit', function(event) {
     const searchButton = document.getElementById('search-button');
     const searchIcon = searchButton.querySelector('i');
-    
+
     // Disable the button
     searchButton.disabled = true;
-    
+
     // Replace search icon with loading spinner
     searchIcon.classList.remove('fa-search');
     searchIcon.classList.add('fa-spinner', 'fa-spin');
-    
+
     // Optional: Change button text or style to indicate loading
     searchButton.classList.add('opacity-50', 'cursor-not-allowed');
 });
@@ -293,12 +293,12 @@ document.getElementById('search-form').addEventListener('submit', function(event
 // Apply highlighting when the page loads
 document.addEventListener('DOMContentLoaded', function() {
     const queryMsg = document.querySelector('input[name="query_msg"]').value;
-    
+
     // Highlight video titles
     document.querySelectorAll('.video-title').forEach(element => {
         element.innerHTML = highlightText(element.textContent, queryMsg);
     });
-    
+
     // Highlight chunk texts
     document.querySelectorAll('.chunk-text').forEach(element => {
         element.innerHTML = highlightText(element.textContent, queryMsg);
