@@ -15,9 +15,15 @@ new-app:
 
 lint:
 	ruff check .
+	ruff format .
+	black .
+	isort .
 
 lint-fix:
 	ruff check . --fix
+	ruff format .
+	black .
+	isort .
 
 format:
 	black .
