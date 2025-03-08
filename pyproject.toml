@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-django", "black", "isort", "flake8", "ruff"]
+dev = ["pytest", "pytest-django", "black", "isort", "flake8", "ruff", "djlint==1.36.4"]
 
 [tool.setuptools.dynamic]
 version = {file = "version.txt"}
