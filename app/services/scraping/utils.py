@@ -1,10 +1,12 @@
-"""
-Utility functions for YouTube scraping.
-"""
+"""Utility functions for YouTube scraping."""
 
 import itertools
 import re
-from typing import Any, List, Optional
+from typing import (
+    Any,
+    List,
+    Optional,
+)
 
 import scrapetube
 import structlog
@@ -13,8 +15,7 @@ logger = structlog.get_logger(__name__)
 
 
 def get_channel_username(channel_link: str) -> str:
-    """
-    Extract the username from a YouTube channel link.
+    """Extract the username from a YouTube channel link.
 
     Args:
         channel_link: The full YouTube channel URL
@@ -28,8 +29,7 @@ def get_channel_username(channel_link: str) -> str:
 
 
 def validate_channel_link(channel_link: str) -> str:
-    """
-    Validate the YouTube channel link format and existence.
+    """Validate the YouTube channel link format and existence.
 
     Args:
         channel_link: The YouTube channel link to validate
@@ -62,8 +62,7 @@ def validate_channel_link(channel_link: str) -> str:
 
 
 def chunk_generator(items: List[Any], chunk_size: int):
-    """
-    Generate chunks of items with a specified size.
+    """Generate chunks of items with a specified size.
 
     Args:
         items: List of items to chunk

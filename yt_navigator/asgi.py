@@ -1,5 +1,4 @@
-"""
-ASGI config for yt_navigator project.
+"""ASGI config for yt_navigator project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 

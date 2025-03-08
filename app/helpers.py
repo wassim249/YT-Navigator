@@ -1,8 +1,9 @@
-"""
-Helper functions for the application.
-"""
+"""Helper functions for the application."""
 
-from datetime import datetime, timedelta
+from datetime import (
+    datetime,
+    timedelta,
+)
 
 
 def get_exact_time(relative_time: str) -> str | None:

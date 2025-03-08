@@ -5,7 +5,12 @@ and transcript scraping components to extract data from YouTube channels.
 """
 
 import concurrent.futures
-from typing import Dict, List, Optional, Tuple
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Tuple,
+)
 
 import scrapetube
 import structlog
@@ -14,7 +19,10 @@ from app.models import Channel
 from app.services.scraping.base import BaseYoutubeScraper
 from app.services.scraping.channel import ChannelScraper
 from app.services.scraping.transcript import TranscriptScraper
-from app.services.scraping.utils import chunk_generator, validate_channel_link
+from app.services.scraping.utils import (
+    chunk_generator,
+    validate_channel_link,
+)
 from app.services.scraping.video import VideoScraper
 
 logger = structlog.get_logger(__name__)

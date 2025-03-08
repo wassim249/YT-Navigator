@@ -1,11 +1,16 @@
-"""
-Transcript-related functionality for YouTube scraping.
-"""
+"""Transcript-related functionality for YouTube scraping."""
 
-from typing import Dict, List
+from typing import (
+    Dict,
+    List,
+)
 
 import structlog
-from youtube_transcript_api import NoTranscriptFound, TranscriptsDisabled, YouTubeTranscriptApi
+from youtube_transcript_api import (
+    NoTranscriptFound,
+    TranscriptsDisabled,
+    YouTubeTranscriptApi,
+)
 
 from app.helpers import convert_seconds_to_timestamp
 
@@ -13,13 +18,10 @@ logger = structlog.get_logger(__name__)
 
 
 class TranscriptScraper:
-    """
-    Transcript-related functionality for YouTube scraping.
-    """
+    """Transcript-related functionality for YouTube scraping."""
 
     def __init__(self, max_transcript_segment_duration: int = 40):
-        """
-        Initialize the transcript scraper.
+        """Initialize the transcript scraper.
 
         Args:
             max_transcript_segment_duration: Maximum duration for transcript segments in seconds
@@ -27,8 +29,7 @@ class TranscriptScraper:
         self.max_transcript_segment_duration = max_transcript_segment_duration
 
     def get_video_transcript(self, video_metadata: Dict) -> List[Dict]:
-        """
-        Fetches and formats the transcript of a YouTube video.
+        """Fetches and formats the transcript of a YouTube video.
 
         Args:
             video_metadata: Dictionary containing video metadata
@@ -65,8 +66,7 @@ class TranscriptScraper:
             return []
 
     def _format_transcript(self, transcript: List[Dict], video_metadata: Dict) -> List[Dict]:
-        """
-        Formats the video transcript into segments with a maximum duration.
+        """Formats the video transcript into segments with a maximum duration.
 
         Args:
             transcript: Raw transcript data from YouTube API

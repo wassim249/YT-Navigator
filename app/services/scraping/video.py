@@ -1,9 +1,12 @@
-"""
-Video-related functionality for YouTube scraping.
-"""
+"""Video-related functionality for YouTube scraping."""
 
 import asyncio
-from typing import Dict, List, Optional, Tuple
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Tuple,
+)
 
 import structlog
 from asgiref.sync import sync_to_async
@@ -17,13 +20,10 @@ logger = structlog.get_logger(__name__)
 
 
 class VideoScraper:
-    """
-    Video-related functionality for YouTube scraping.
-    """
+    """Video-related functionality for YouTube scraping."""
 
     def __init__(self, max_concurrent_tasks: int = 4):
-        """
-        Initialize the video scraper.
+        """Initialize the video scraper.
 
         Args:
             max_concurrent_tasks: Maximum number of concurrent tasks for processing videos
@@ -32,16 +32,15 @@ class VideoScraper:
         self.semaphore = asyncio.Semaphore(max_concurrent_tasks)
 
     async def __aenter__(self):
-        """Initialize async resources"""
+        """Initialize async resources."""
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Cleanup async resources"""
+        """Cleanup async resources."""
         pass
 
     def get_formatted_video_metadata(self, video: Dict) -> Optional[Dict]:
-        """
-        Format raw video metadata into a standardized structure.
+        """Format raw video metadata into a standardized structure.
 
         Args:
             video: Raw video metadata from YouTube
@@ -79,8 +78,7 @@ class VideoScraper:
             return None
 
     async def process_single_video(self, video: Dict, transcript_scraper) -> Tuple[Optional[Dict], List[Dict]]:
-        """
-        Process a single video to extract metadata and transcript.
+        """Process a single video to extract metadata and transcript.
 
         Args:
             video: Raw video data
@@ -111,8 +109,7 @@ class VideoScraper:
             return None, []
 
     async def process_video_chunk(self, chunk: List[Dict], transcript_scraper) -> Tuple[List[Dict], List[Dict]]:
-        """
-        Process a chunk of videos to extract transcripts concurrently.
+        """Process a chunk of videos to extract transcripts concurrently.
 
         Args:
             chunk: List of raw video data
@@ -136,8 +133,7 @@ class VideoScraper:
         return videos, chunks
 
     async def save_videos_to_db(self, videos: List[Dict], channel_id: str) -> None:
-        """
-        Save scraped videos to the database.
+        """Save scraped videos to the database.
 
         Args:
             videos: List of video metadata
@@ -156,8 +152,7 @@ class VideoScraper:
             logger.error("Failed to save videos batch", channel_id=channel_id, error=e)
 
     async def _save_single_video(self, video: Dict, channel_id: str) -> None:
-        """
-        Save a single video to the database.
+        """Save a single video to the database.
 
         Args:
             video: Video metadata

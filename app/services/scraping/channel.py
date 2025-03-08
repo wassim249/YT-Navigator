@@ -1,8 +1,9 @@
-"""
-Channel-related functionality for YouTube scraping.
-"""
+"""Channel-related functionality for YouTube scraping."""
 
-from typing import Dict, Optional
+from typing import (
+    Dict,
+    Optional,
+)
 
 import httpx
 import structlog
@@ -17,13 +18,10 @@ logger = structlog.get_logger(__name__)
 
 
 class ChannelScraper:
-    """
-    Channel-related functionality for YouTube scraping.
-    """
+    """Channel-related functionality for YouTube scraping."""
 
     def __init__(self, request_timeout: int = 10):
-        """
-        Initialize the channel scraper.
+        """Initialize the channel scraper.
 
         Args:
             request_timeout: Timeout for HTTP requests in seconds
@@ -32,18 +30,17 @@ class ChannelScraper:
         self.client = None
 
     async def __aenter__(self):
-        """Initialize async client for context manager usage"""
+        """Initialize async client for context manager usage."""
         self.client = httpx.AsyncClient(timeout=self.request_timeout)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Cleanup async client"""
+        """Cleanup async client."""
         if self.client:
             await self.client.aclose()
 
     async def get_channel_data(self, channel_link: str, channel_username: Optional[str] = None) -> Optional[Channel]:
-        """
-        Fetch and store channel data from a YouTube channel link.
+        """Fetch and store channel data from a YouTube channel link.
 
         Args:
             channel_link: The YouTube channel link
@@ -113,8 +110,7 @@ class ChannelScraper:
         return None
 
     def _extract_channel_metadata(self, soup: BeautifulSoup) -> Optional[Dict]:
-        """
-        Extract channel metadata from BeautifulSoup object.
+        """Extract channel metadata from BeautifulSoup object.
 
         Args:
             soup: BeautifulSoup object of the channel page

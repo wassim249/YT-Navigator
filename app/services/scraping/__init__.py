@@ -1,5 +1,4 @@
-"""
-YouTube scraping module for fetching channel and video data.
+"""YouTube scraping module for fetching channel and video data.
 
 This module provides components for scraping YouTube channels and videos,
 including transcript extraction and processing.

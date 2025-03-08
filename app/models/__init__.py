@@ -1,3 +1,5 @@
+"""Models for the app."""
+
 from .channel import Channel
 from .user import User
 from .video import Video

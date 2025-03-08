@@ -1,3 +1,5 @@
+"""Settings for the yt_navigator app."""
+
 import os
 from pathlib import Path
 

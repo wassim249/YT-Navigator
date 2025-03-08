@@ -29,7 +29,7 @@
 
       :root {
         --bg-color: #121212;
-        --text-color: #e1e1e1; 
+        --text-color: #e1e1e1;
         --muted-text-color: #b3b3b3;
         --accent-color: #ff0000;
       }
@@ -72,9 +72,9 @@
               </a>
               <form id="logout-form" method="post" action="{% url 'app:logout' %}">
                 {% csrf_token %}
-                <button type="submit" id="logout-btn" 
+                <button type="submit" id="logout-btn"
                         class="bg-accent-color text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors">
-                  Logout 
+                  Logout
                 </button>
               </form>
             {% else %}
@@ -97,7 +97,7 @@
           </div>
         {% endfor %}
       {% endif %}
-      
+
       {% block content %}
       {% endblock content %}
     </main>
@@ -119,7 +119,7 @@
             if (logoutForm) {
                 logoutForm.addEventListener('submit', function(event) {
                     event.preventDefault();
-                    
+
                     // Add loading state to logout button
                     const logoutBtn = document.getElementById('logout-btn');
                     logoutBtn.disabled = true;

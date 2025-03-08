@@ -1,11 +1,21 @@
+"""Views for the authentication app."""
+
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import redirect, render
+from django.contrib.auth import (
+    authenticate,
+    login,
+    logout,
+)
+from django.shortcuts import (
+    redirect,
+    render,
+)
 
 from app.forms import RegistrationForm
 
 
 def register_view(request):
+    """Register view."""
     if request.method == "POST":
         form = RegistrationForm(request.POST)
         print(request.POST)  # Debugging form values

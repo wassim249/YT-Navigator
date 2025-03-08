@@ -1,5 +1,4 @@
-"""
-WSGI config for yt_navigator project.
+"""WSGI config for yt_navigator project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
