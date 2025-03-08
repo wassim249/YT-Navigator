@@ -1,5 +1,5 @@
 makemigrations:
-	python manage.py makemigrations
+	python manage.py makemigrations $(app_name)
 
 migrate:
 	python manage.py migrate
