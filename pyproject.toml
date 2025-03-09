@@ -11,23 +11,26 @@ readme = "README.md"
 requires-python = ">=3.13.2"
 license = { text = "MIT" }
 dependencies = [
-    "django>=5.1.7",
-    "gunicorn",
-    "psycopg2-binary>=2.9.10",
-    "asyncpg>=0.30.0",
-    "sentence-transformers>=3.4.1",
-    "rank_bm25>=0.2.2",
-    "python-dotenv",
-    "structlog>=25.1.0",
-    "youtube-transcript-api>=0.6.3",
-    "scrapetube>=2.5.1",
-    "bs4",
-    "httpx>=0.28.1",
-    "torch>=2.6.0",
-    "langchain-core>=0.3.37",
-    "langchain-huggingface>=0.1.2",
-    "langchain-postgres>=0.0.7",
-    "langchain-community>=0.3.17",
+    "django==5.1.7",
+    "gunicorn==21.2.0",
+    "psycopg2-binary==2.9.10",
+    "asyncpg==0.30.0",
+    "sentence-transformers==3.4.1",
+    "rank_bm25==0.2.2",
+    "python-dotenv==1.0.1",
+    "structlog==25.1.0",
+    "youtube-transcript-api==0.6.3",
+    "scrapetube==2.5.1",
+    "bs4==0.0.2",
+    "httpx==0.28.1",
+    "torch==2.6.0",
+    "langchain-core==0.3.37",
+    "langchain-huggingface==0.1.2",
+    "langchain-postgres==0.0.7",
+    "langchain-community==0.3.17",
+    "langgraph==0.3.5",
+    "langchain-groq==0.2.5",
+    "langgraph-checkpoint-postgres==2.0.16"
 ]
 
 [project.optional-dependencies]
