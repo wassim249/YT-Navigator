@@ -7,6 +7,7 @@ from django.contrib.auth.views import (
 from django.urls import path
 
 from .views import (
+    chatbot_page,
     delete_video,
     get_channel_information,
     home_view,
@@ -15,6 +16,7 @@ from .views import (
     query_page,
     register_view,
     scan_channel,
+    send_message,
 )
 
 app_name = "app"
@@ -35,4 +37,7 @@ urlpatterns = [
     # query page
     path("query/", query_page, name="query_page"),
     path("query-request/", query, name="query_request"),
+    # chatbot
+    path("chatbot/", chatbot_page, name="chatbot_page"),
+    path("send-message/", send_message, name="send_message"),
 ]
