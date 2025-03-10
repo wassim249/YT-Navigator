@@ -306,7 +306,7 @@ class AgentGraph:
         """
         string_wrapper = ""
         for idx, tool in enumerate(tools):
-            string_wrapper += f"""## Tool {idx+1}:
+            string_wrapper += f"""## Tool {idx + 1}:
             * Name: {tool.name}
             * Description: {tool.description}
             """

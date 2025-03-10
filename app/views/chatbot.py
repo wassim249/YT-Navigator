@@ -26,7 +26,6 @@ async def chatbot_page(request):
     chat_history = await graph.get_chat_history(user_id)
 
     try:
-
         return render(
             request,
             "chatbot.html",
