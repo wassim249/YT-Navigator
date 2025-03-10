@@ -40,7 +40,7 @@ graph TD
     C --> G[User selects number of videos to scan]
     G --> H[Fetch Video Details]
     H --> I[Process Video Metadata]
-    
+
     H --> J[Extract Video Transcripts]
     I --> K1[Save to Relational Database]
     J --> L[Split into Video Segments]
@@ -76,9 +76,9 @@ graph TD
 ### 3 - 💬 Chat with the channel
 ![Chat with the channel](./images/chat.png)
 
-The chat interface facilitates interactive conversations with an AI agent knowledgeable about the channel's content, utilizing the ReAct framework. When a user sends a message, the system processes it through a decision-making mechanism to identify the appropriate response type. The message can be addressed in three ways: 
-1) 🔄 A direct response without tool calls for general inquiries, 
-2) ⛔ A static response for irrelevant questions, 
+The chat interface facilitates interactive conversations with an AI agent knowledgeable about the channel's content, utilizing the ReAct framework. When a user sends a message, the system processes it through a decision-making mechanism to identify the appropriate response type. The message can be addressed in three ways:
+1) 🔄 A direct response without tool calls for general inquiries,
+2) ⛔ A static response for irrelevant questions,
 3) 🛠️ A tool-assisted response that queries the vector database to extract specific information from video transcripts. In the case of tool-assisted responses, the agent engages in a cycle where it employs its tools (semantic search and SQL Select query execution) to gather information before crafting a comprehensive answer.
 
 This process mitigates hallucinations and allows for the use of smaller models in handling complex tasks.
@@ -88,23 +88,23 @@ This process mitigates hallucinations and allows for the use of smaller models i
 
 ```mermaid
 graph TD
-    A[__start__] --> B[route_message 
+    A[__start__] --> B[route_message
     llama-3.1-8b-instant]
-    
+
     B -.-> C[non_tool_calls_reply
     llama-3.1-8b-instant]
     B -.-> D[static_not_relevant_reply
     llama-3.1-8b-instant]
     B -.-> E[tool_calls_reply
     qwen-qwq-32b]
-    
+
     subgraph React Agent qwen-qwq-32b
         E1[__start__] --> E2[agent]
         E2 -.continue.-> E3[tools]
         E2 -.end.-> E4[__end__]
         E3 --> E2
     end
-    
+
     C --> F[__end__]
     D --> F
     E --> F
@@ -119,7 +119,7 @@ graph TD
   - PostgreSQL
   - Structlog for logging
   - Pydantic for data validation
-- **🧠 AI & ML**: 
+- **🧠 AI & ML**:
   - [LangGraph](https://www.langchain.com/langgraph) for conversational AI
   - [Sentence Transformers](https://www.sentence-transformers.org/) for semantic search
   - [PGVector](https://www.pgvector.org/) as a vector database
@@ -129,7 +129,7 @@ graph TD
 - **⚙️ Data Processing**:
   - [Scrapetube](https://github.com/dermasmid/scrapetube) for scraping videos
   - [youtube-transcript-api](https://pypi.org/project/youtube-transcript-api/) for obtaining transcripts
-- **🎨 Frontend**: 
+- **🎨 Frontend**:
   - Django templates with modern CSS
   - Responsive design
 
