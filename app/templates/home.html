@@ -197,13 +197,13 @@
                                     </div>
                                 {% endfor %}
                             </div>
-                            
+
                             <!-- Pagination -->
                             {% if videos.paginator.num_pages > 1 %}
                             <div class="mt-8 flex justify-center">
                                 <nav class="inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                                     {% if videos.has_previous %}
-                                    <a href="?page={{ videos.previous_page_number }}" 
+                                    <a href="?page={{ videos.previous_page_number }}"
                                        class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-600 bg-[#2C2C2C] text-sm font-medium text-white hover:bg-gray-700">
                                         <span class="sr-only">Previous</span>
                                         <i class="fas fa-chevron-left"></i>
@@ -214,22 +214,22 @@
                                         <i class="fas fa-chevron-left"></i>
                                     </span>
                                     {% endif %}
-                                    
+
                                     {% for i in videos.paginator.page_range %}
                                         {% if videos.number == i %}
                                         <span class="relative inline-flex items-center px-4 py-2 border border-gray-600 bg-rose-500 text-sm font-medium text-white">
                                             {{ i }}
                                         </span>
                                         {% elif i > videos.number|add:'-3' and i < videos.number|add:'3' %}
-                                        <a href="?page={{ i }}" 
+                                        <a href="?page={{ i }}"
                                            class="relative inline-flex items-center px-4 py-2 border border-gray-600 bg-[#2C2C2C] text-sm font-medium text-white hover:bg-gray-700">
                                             {{ i }}
                                         </a>
                                         {% endif %}
                                     {% endfor %}
-                                    
+
                                     {% if videos.has_next %}
-                                    <a href="?page={{ videos.next_page_number }}" 
+                                    <a href="?page={{ videos.next_page_number }}"
                                        class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-600 bg-[#2C2C2C] text-sm font-medium text-white hover:bg-gray-700">
                                         <span class="sr-only">Next</span>
                                         <i class="fas fa-chevron-right"></i>

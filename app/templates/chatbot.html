@@ -97,16 +97,16 @@
                                                     {% for video in message.videos %}
                                                         <div class="bg-[#1E1E1E] rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
                                                             <div class="flex space-x-4">
-                                                                <a href="https://www.youtube.com/watch?v={{ video.id }}" 
-                                                                   target="_blank" 
+                                                                <a href="https://www.youtube.com/watch?v={{ video.id }}"
+                                                                   target="_blank"
                                                                    class="flex-shrink-0">
-                                                                    <img src="{{ video.thumbnail_url }}" 
-                                                                         alt="{{ video.title }}" 
+                                                                    <img src="{{ video.thumbnail_url }}"
+                                                                         alt="{{ video.title }}"
                                                                          class="w-32 h-18 object-cover"
                                                                          width="128" height="72"/>
                                                                 </a>
                                                                 <div class="py-2 pr-4 flex-1">
-                                                                    <a href="https://www.youtube.com/watch?v={{ video.id }}" 
+                                                                    <a href="https://www.youtube.com/watch?v={{ video.id }}"
                                                                        target="_blank"
                                                                        class="font-medium text-sm text-white hover:text-rose-500 transition-colors line-clamp-2 mb-2">
                                                                         {{ video.title }}
@@ -119,7 +119,7 @@
                                                                     {% if video.timestamps %}
                                                                         <div class="space-y-1">
                                                                             {% for ts in video.timestamps %}
-                                                                                <a href="https://www.youtube.com/watch?v={{ video.id }}&t={{ ts.start_time }}s" 
+                                                                                <a href="https://www.youtube.com/watch?v={{ video.id }}&t={{ ts.start_time }}s"
                                                                                    target="_blank"
                                                                                    class="block text-xs text-[var(--muted-text-color)] hover:text-rose-500 transition-colors">
                                                                                     <span class="font-medium">{{ ts.start_time }} - {{ ts.end_time }}</span>
@@ -177,14 +177,14 @@
                 <!-- Channel Information - Right Column -->
                 {% if channel %}
                     <section class="col-span-1 bg-[#1E1E1E] rounded-2xl shadow-xl border border-gray-800 overflow-hidden">
-                        <div id="channel-info-header" 
+                        <div id="channel-info-header"
                              class="px-6 py-5 flex justify-between items-center group hover:bg-[#2C2C2C] transition-colors duration-200">
                             <h2 class="text-xl font-semibold text-white flex items-center space-x-3">
                                 <i class="fab fa-youtube text-rose-500 text-2xl"></i>
                                 <span class="tracking-tight">Channel Information</span>
                             </h2>
                         </div>
-                        <div id="channel-info-content" 
+                        <div id="channel-info-content"
                              class="border-t border-gray-700 max-h-screen overflow-visible transition-all duration-300 ease-in-out">
                             <div class="p-8 space-y-6">
                                 <div class="flex flex-col items-center space-y-6">
@@ -310,7 +310,7 @@
 
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('flex', 'mb-6', 'animate-fade-in');
-                
+
                 if (isUser) {
                     // User message styling
                     messageDiv.classList.add('justify-end');
@@ -334,16 +334,16 @@
                                 ${videos.map(video => `
                                     <div class="bg-[#1E1E1E] rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
                                         <div class="flex space-x-4">
-                                            <a href="https://www.youtube.com/watch?v=${video.id}" 
-                                               target="_blank" 
+                                            <a href="https://www.youtube.com/watch?v=${video.id}"
+                                               target="_blank"
                                                class="flex-shrink-0">
-                                                <img src="${video.thumbnail_url}" 
-                                                     alt="${video.title}" 
+                                                <img src="${video.thumbnail_url}"
+                                                     alt="${video.title}"
                                                      class="w-32 h-18 object-cover"
                                                      width="128" height="72"/>
                                             </a>
                                             <div class="py-2 pr-4 flex-1">
-                                                <a href="https://www.youtube.com/watch?v=${video.id}" 
+                                                <a href="https://www.youtube.com/watch?v=${video.id}"
                                                    target="_blank"
                                                    class="font-medium text-sm text-white hover:text-rose-500 transition-colors line-clamp-2 mb-2">
                                                     ${video.title}
@@ -356,7 +356,7 @@
                                                 ${video.timestamps ? `
                                                     <div class="space-y-1">
                                                         ${video.timestamps.map(ts => `
-                                                            <a href="https://www.youtube.com/watch?v=${video.id}&t=${ts.start}s" 
+                                                            <a href="https://www.youtube.com/watch?v=${video.id}&t=${ts.start}s"
                                                                target="_blank"
                                                                class="block text-xs text-[var(--muted-text-color)] hover:text-rose-500 transition-colors">
                                                                 <span class="font-medium">${ts.start} - ${ts.end}</span>
@@ -394,7 +394,7 @@
                         </div>
                     `;
                 }
-                
+
                 chatArea.appendChild(messageDiv);
                 chatArea.scrollTop = chatArea.scrollHeight;
             }
@@ -403,7 +403,7 @@
             async function handleChatSubmission(event) {
                 event.preventDefault();
                 const message = chatInput.value.trim();
-                
+
                 if (!message) {
                     alert('Please enter a message');
                     return;
@@ -411,20 +411,20 @@
 
                 // Add user message to chat area
                 addMessageToChatArea(message, true);
-                
+
                 // Start timing the request
                 const startTime = performance.now();
-                
+
                 // Disable input during processing
                 chatInput.disabled = true;
                 document.getElementById('send-btn').disabled = true;
                 document.getElementById('send-btn-icon').classList.add('hidden');
                 document.getElementById('send-btn-loading').classList.remove('hidden');
                 document.getElementById('progress-indicator').classList.remove('hidden');
-                
+
                 try {
                     const formData = new FormData(chatForm);
-                    formData.append('message', message);    
+                    formData.append('message', message);
                     const response = await fetch('{% url "app:send_message" %}', {
                         method: 'POST',
                         body: formData
@@ -454,27 +454,27 @@
                     console.error('Chat error:', error);
                     let errorMessage = error.response;
                     let errorStatus = error.status;
-                    
+
                     // If error doesn't have response/status (e.g. network error), use defaults
                     if (!errorMessage) {
                         errorMessage = 'Network error occurred. Please check your connection.';
                         errorStatus = 0;
                     }
-                    
+
                     const errorDiv = document.createElement('div');
                     errorDiv.className = `error-message ${errorStatus === 429 ? 'rate-limit-error' : ''}`;
-                    
+
                     const icon = document.createElement('i');
                     icon.className = `fas ${errorStatus === 429 ? 'fa-clock' : 'fa-exclamation-circle'} mr-2`;
                     errorDiv.appendChild(icon);
-                    
+
                     const messageText = document.createTextNode(errorMessage);
                     errorDiv.appendChild(messageText);
-                    
+
                     const messageContainer = document.createElement('div');
                     messageContainer.className = 'flex mb-6 animate-fade-in';
                     messageContainer.appendChild(errorDiv);
-                    
+
                     chatArea.appendChild(messageContainer);
                     chatArea.scrollTop = chatArea.scrollHeight;
                 } finally {
@@ -496,7 +496,7 @@
             // Clear history button event listener
             clearHistoryBtn.addEventListener('click', async function(event) {
                 event.preventDefault();
-                
+
                 const confirmClear = confirm('Are you sure you want to clear chat history?');
                 if (!confirmClear) return;
 
@@ -511,7 +511,7 @@
                     if (response.ok) {
                         // Clear chat area
                         chatArea.innerHTML = '';
-                        
+
                         // Optional: Show empty state
                         const emptyStateDiv = document.createElement('div');
                         emptyStateDiv.classList.add('text-center', 'text-gray-500', 'py-10');
