@@ -45,9 +45,6 @@ packages = [
 [tool.setuptools.dynamic]
 version = {file = "version.txt"}
 
-# [tool.setuptools.package-data]
-# example_pkg = ["*.json"]
-
 
 [tool.pytest.ini_options]
 markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
@@ -90,7 +87,7 @@ ignore = "migrations"
 
 [tool.ruff]
 line-length = 119
-exclude = ["migrations"]
+exclude = ["migrations","*.ipynb"]
 
 [tool.ruff.lint]
 # Enable flake8-bugbear (`B`) rules and docstring (`D`) rules
