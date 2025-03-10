@@ -231,7 +231,7 @@ class VectorDatabaseService:
                         logger.error("Failed to get vector store for document addition", channel_id=channel_id)
                         return
 
-                    await temp_vstore.aadd_documents(non_existing_chunks, ids=non_existing_ids)
+                    await self._add_chunks_in_batches(non_existing_chunks, channel_id, temp_vstore)
                 except RuntimeError as e:
                     logger.error(
                         "Event loop error during document addition", error=e, traceback=traceback.format_exc()
@@ -311,6 +311,18 @@ class VectorDatabaseService:
         except Exception as e:
             logger.error("Error adding chunks", error=str(e), traceback=traceback.format_exc())
             raise
+
+    async def _add_chunks_in_batches(self, chunks: List[Document], channel_id: str, vstore: PGVector):
+        """Add chunks to the vector database in batches.
+
+        Args:
+            chunks: List of chunks to add.
+            channel_id: Channel ID for the chunks.
+            vstore: Vector store instance.
+        """
+        for i in range(0, len(chunks), settings.EMBEDDING_BATCH_SIZE):
+            batch = chunks[i : i + settings.EMBEDDING_BATCH_SIZE]
+            await vstore.aadd_documents(batch)
 
     def _format_time_for_django(self, seconds: float) -> str:
         """Format seconds into a time string compatible with Django TimeField.
