@@ -4,7 +4,7 @@ makemigrations:
 migrate:
 	python manage.py migrate
 
-start:
+prod:
 	python -m gunicorn -b 0.0.0.0:8000 core.wsgi
 
 dev:
@@ -40,12 +40,17 @@ install-hooks:
 run-hooks:
 	pre-commit run --all-files
 
-
-clean:
-	find . -name "*.pyc" -delete
-	find . -name "__pycache__" -delete
-	find . -name ".DS_Store" -delete
-	find . -name ".pytest_cache" -delete
-	find . -name ".ruff_cache" -delete
-	find . -name ".mypy_cache" -delete
-	find . -name "migrations" -delete
+help:
+	@echo "Available commands:"
+	@echo "  makemigrations   - Create new migrations based on changes"
+	@echo "  migrate          - Apply migrations"
+	@echo "  prod             - Run the application in production mode"
+	@echo "  dev              - Run the application in development mode"
+	@echo "  new-app         - Create a new Django app"
+	@echo "  lint             - Run linting tools"
+	@echo "  lint-fix         - Fix linting issues"
+	@echo "  format           - Format code with black"
+	@echo "  check-all        - Run linting and check formatting"
+	@echo "  install-hooks    - Install pre-commit hooks"
+	@echo "  run-hooks        - Run pre-commit hooks on all files"
+	@echo "  clean            - Remove temporary files"
