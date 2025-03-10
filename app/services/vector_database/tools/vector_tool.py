@@ -334,9 +334,10 @@ class VectorDatabaseTools:
             "- Discover relevant video content across different topics and contexts "
             "- Retrieve video chunks that closely align with the intent of your search "
             "- Explore nuanced connections between search queries and video content "
+            "- Get an Idea about the Channel's content"
             "Ideal for complex information retrieval tasks that require understanding context, "
             "subtext, and deeper semantic relationships in video transcripts."
-            "The tool may return some irrelevant results, your task is to provide the user with the most relevant results",
+            "The tool may return some irrelevant results, your task is to provide the user with the most relevant ones",
             args_schema=VectorDatabaseToolInput,
             handle_tool_error=True,
         )
