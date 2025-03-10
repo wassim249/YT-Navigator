@@ -88,7 +88,11 @@ DATABASES = {
     }
 }
 
+# SQLAlchemy connection string for async operations
 DATABASE_URL = f"postgresql+asyncpg://{DATABASES['default']['USER']}:{DATABASES['default']['PASSWORD']}@{DATABASES['default']['HOST']}:{DATABASES['default']['PORT']}/{DATABASES['default']['NAME']}"
+
+# Standard PostgreSQL connection string for psycopg2
+PSYCOPG2_DATABASE_URL = f"postgresql://{DATABASES['default']['USER']}:{DATABASES['default']['PASSWORD']}@{DATABASES['default']['HOST']}:{DATABASES['default']['PORT']}/{DATABASES['default']['NAME']}"
 
 
 # Password validation
@@ -211,3 +215,6 @@ RERANKER_CUDA_BENCHMARK = os.getenv("RERANKER_CUDA_BENCHMARK", True)
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
 EMBEDDING_BATCH_SIZE = os.getenv("EMBEDDING_BATCH_SIZE", 32)
 EMBEDDING_NORMALIZE_EMBEDDINGS = os.getenv("EMBEDDING_NORMALIZE_EMBEDDINGS", True)
+
+INSTANT_LLM = os.getenv("INSTANT_LLM", "llama-3.1-8b-instant")
+POWERFUL_LLM = os.getenv("POWERFUL_LLM", "qwen-qwq-32b")
