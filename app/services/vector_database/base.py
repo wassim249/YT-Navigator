@@ -284,7 +284,7 @@ class VectorDatabaseService:
 
                     # Convert start_time and end_time to proper time format
                     start_time = chunk.metadata.get("start_time")
-                    end_time = chunk.metadata.get("end_time")
+                    end_time = chunk.metadata.get("start_time") + chunk.metadata.get("duration")
 
                     # Format time values for Django TimeField (if they're not None)
                     formatted_start = self._format_time_for_django(start_time) if start_time is not None else None
