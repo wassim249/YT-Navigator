@@ -2,6 +2,8 @@
 
 from django.db import models
 
+from app.models.video import Video
+
 
 class Channel(models.Model):
     """A model representing a YouTube channel.
@@ -27,20 +29,16 @@ class Channel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        """Returns a string representation of the channel.
-
-        Returns:
-            A formatted string with the channel's ID, name, username, and description.
+    async def pretty_str(self):
+        """Returns a pretty string representation of the channel."""
+        scanned_videos_count = await Video.objects.filter(channel=self).acount()
+        return f"""
+        ID: {self.id}
+        Name: {self.name}
+        Username: {self.username}
+        Description: {self.description}
+        Scanned Videos Count: {scanned_videos_count}
         """
-        return """
-        ID: {id}
-        Name: {name}
-        Username: {username}
-        Description: {description}
-        """.format(
-            name=self.name, username=self.username, description=self.description, id=self.id
-        )
 
     class Meta:
         """Metadata options for the Channel model."""
