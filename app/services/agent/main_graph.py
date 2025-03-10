@@ -481,9 +481,34 @@ class AgentGraph:
         """
         try:
             await self.get_pool()
-            state = await sync_to_async(
-                lambda: self.graph.get_state(config={"configurable": {"thread_id": user_id}})
-            )()
+
+            # Get the current event loop
+            current_loop = asyncio.get_running_loop()
+            logger.debug("Getting chat history in event loop", loop_id=id(current_loop))
+
+            # Make sure the graph is initialized in the current event loop
+            if self.graph is None:
+                logger.info("Graph not initialized, setting up now")
+                await self.setup()
+
+            # Use a thread-sensitive sync_to_async to ensure proper event loop handling
+            async def get_state():
+                try:
+
+                    @sync_to_async(thread_sensitive=True)
+                    def _get_state():
+                        try:
+                            return self.graph.get_state(config={"configurable": {"thread_id": user_id}})
+                        except Exception as e:
+                            logger.error("Error getting graph state", error=e, traceback=traceback.format_exc())
+                            return None
+
+                    return await _get_state()
+                except RuntimeError as e:
+                    logger.error("Event loop error during state retrieval", error=e, traceback=traceback.format_exc())
+                    return None
+
+            state = await get_state()
 
             if not state:
                 return []
@@ -535,14 +560,25 @@ class AgentGraph:
             Exception: If there's an error clearing the chat history.
         """
         try:
-            await self.get_pool()
+            # Get the current event loop
+            current_loop = asyncio.get_running_loop()
+            logger.debug("Clearing chat history in event loop", loop_id=id(current_loop))
 
-            async with self.conn_pool.connection() as conn:
+            # Make sure the pool is initialized in the current event loop
+            conn_pool = await self.get_pool()
+
+            # Use a new connection for this specific operation
+            async with conn_pool.connection() as conn:
                 for table in settings.CHECKPOINT_TABLES:
-                    await conn.execute(f"DELETE FROM {table} WHERE thread_id = %s", (user_id,))
+                    try:
+                        await conn.execute(f"DELETE FROM {table} WHERE thread_id = %s", (user_id,))
+                        logger.info(f"Cleared {table} for user {user_id}")
+                    except Exception as e:
+                        logger.error(f"Error clearing {table}", error=e, traceback=traceback.format_exc())
+                        raise
 
         except Exception as e:
-            logger.error("Failed to clear chat history", type="error", error=str(e), traceback=traceback.format_exc())
+            logger.error("Failed to clear chat history", error=str(e), traceback=traceback.format_exc())
             raise
 
 
@@ -562,29 +598,35 @@ async def get_graph_instance():
     """
     global _graph_instance
 
-    # Get the current event loop
-    current_loop = asyncio.get_running_loop()
-    logger.debug("Getting graph instance in event loop", loop_id=id(current_loop))
+    try:
+        # Get the current event loop
+        current_loop = asyncio.get_running_loop()
+        logger.debug("Getting graph instance in event loop", loop_id=id(current_loop))
 
-    # If instance doesn't exist or was created in a different event loop, create a new one
-    if _graph_instance is None:
-        logger.info("Creating new AgentGraph instance")
-        _graph_instance = AgentGraph()
-        await _graph_instance.setup()
-    else:
-        # Check if we need to reinitialize due to event loop changes
-        try:
-            # Try a simple operation to check if the instance is usable
-            await _graph_instance.get_pool()
-        except RuntimeError as e:
-            if "is bound to a different event loop" in str(e):
-                logger.warning("Existing graph instance bound to different event loop, reinitializing")
-                _graph_instance = AgentGraph()
-                await _graph_instance.setup()
-            else:
-                raise
+        # If instance doesn't exist or was created in a different event loop, create a new one
+        if _graph_instance is None:
+            logger.info("Creating new AgentGraph instance")
+            _graph_instance = AgentGraph()
+            await _graph_instance.setup()
+        else:
+            # Check if we need to reinitialize due to event loop changes
+            try:
+                # Try a simple operation to check if the instance is usable
+                await _graph_instance.get_pool()
+            except (RuntimeError, asyncio.InvalidStateError) as e:
+                error_msg = str(e)
+                if "is bound to a different event loop" in error_msg or "Event loop is closed" in error_msg:
+                    logger.warning("Existing graph instance has event loop issues, reinitializing", error=error_msg)
+                    _graph_instance = AgentGraph()
+                    await _graph_instance.setup()
+                else:
+                    logger.error("Error checking graph instance", error=e, traceback=traceback.format_exc())
+                    raise
 
-    return _graph_instance
+        return _graph_instance
+    except Exception as e:
+        logger.error("Error getting graph instance", error=e, traceback=traceback.format_exc())
+        raise
 
 
 # Function to get the graph instance synchronously if needed
