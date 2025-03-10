@@ -136,6 +136,9 @@ class AgentGraph:
             timeout=60,
         )
 
+        # Open the pool explicitly as recommended in the deprecation warning
+        await conn_pool.open()
+
         return conn_pool
 
     async def route_message(self, state: AgentState) -> AgentState:
