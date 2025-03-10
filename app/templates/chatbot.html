@@ -205,6 +205,11 @@
                                             <i class="fas fa-external-link-alt mr-3 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                                             View Channel
                                         </a>
+
+                                        <button id="clear-history-btn" class="mt-2 text-sm text-rose-500 hover:text-rose-300 transition-colors">
+                                            <i class="fas fa-trash mr-1"></i>
+                                            Clear History
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -279,6 +284,7 @@
             const chatForm = document.getElementById('chat-form');
             const chatInput = document.getElementById('chat-input');
             const chatArea = document.getElementById('chat-area');
+            const clearHistoryBtn = document.getElementById('clear-history-btn');
 
             // Focus the chat input when the page loads
             chatInput.focus();
@@ -486,6 +492,40 @@
 
             // Event listener for chat form submission
             chatForm.addEventListener('submit', handleChatSubmission);
+
+            // Clear history button event listener
+            clearHistoryBtn.addEventListener('click', async function(event) {
+                event.preventDefault();
+                
+                const confirmClear = confirm('Are you sure you want to clear chat history?');
+                if (!confirmClear) return;
+
+                try {
+                    const response = await fetch('{% url "app:clear_chat_history" %}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Clear chat area
+                        chatArea.innerHTML = '';
+                        
+                        // Optional: Show empty state
+                        const emptyStateDiv = document.createElement('div');
+                        emptyStateDiv.classList.add('text-center', 'text-gray-500', 'py-10');
+                        emptyStateDiv.textContent = 'Your chat history is now empty.';
+                        chatArea.appendChild(emptyStateDiv);
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to clear chat history');
+                    }
+                } catch (error) {
+                    console.error('Clear history error:', error);
+                    alert(error.message || 'An error occurred while clearing chat history');
+                }
+            });
 
             // Quick prompt buttons event listener
             const quickPromptButtons = document.querySelectorAll('.quick-prompt-btn');

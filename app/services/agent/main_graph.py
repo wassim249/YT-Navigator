@@ -471,6 +471,9 @@ class AgentGraph:
 
         Returns:
             List[dict]: List of chat messages in the conversation history.
+
+        Raises:
+            Exception: If there's an error fetching the chat history.
         """
         try:
             await self.get_pool()
@@ -515,7 +518,27 @@ class AgentGraph:
             return updated_messages
 
         except Exception as e:
-            logger.error("Failed to fetch chat history", type="error", error=str(e))
+            logger.error("Failed to fetch chat history", type="error", error=str(e), traceback=traceback.format_exc())
+            raise
+
+    async def clear_chat_history(self, user_id: str) -> None:
+        """Clear all chat history for a given thread ID.
+
+        Args:
+            user_id: The ID of the user to clear history for.
+
+        Raises:
+            Exception: If there's an error clearing the chat history.
+        """
+        try:
+            await self.get_pool()
+
+            async with self.conn_pool.connection() as conn:
+                for table in settings.CHECKPOINT_TABLES:
+                    await conn.execute(f"DELETE FROM {table} WHERE thread_id = %s", (user_id,))
+
+        except Exception as e:
+            logger.error("Failed to clear chat history", type="error", error=str(e), traceback=traceback.format_exc())
             raise
 
 

@@ -89,3 +89,19 @@ async def send_message(request):
             {"error": True, "response": error_message},
             status=status_code,
         )
+
+
+@login_required
+@require_http_methods(["POST"])
+async def clear_chat_history(request):
+    """Clear the chat history for the current user."""
+    user_id = await sync_to_async(lambda: str(request.user.id))()
+
+    try:
+        graph = await get_graph_instance()
+        await graph.clear_chat_history(user_id)
+        return JsonResponse({"success": True})
+
+    except Exception as e:
+        logger.error("Failed to clear chat history", type="error", error=str(e), traceback=traceback.format_exc())
+        return JsonResponse({"success": False, "error": str(e)}, status=500)

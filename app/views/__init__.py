@@ -3,6 +3,7 @@
 from .authentication import register_view
 from .chatbot import (
     chatbot_page,
+    clear_chat_history,
     send_message,
 )
 from .home import home_view
@@ -28,4 +29,5 @@ __all__ = [
     "query",
     "send_message",
     "chatbot_page",
+    "clear_chat_history",
 ]

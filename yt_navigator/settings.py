@@ -218,3 +218,5 @@ EMBEDDING_NORMALIZE_EMBEDDINGS = os.getenv("EMBEDDING_NORMALIZE_EMBEDDINGS", Tru
 
 INSTANT_LLM = os.getenv("INSTANT_LLM", "llama-3.1-8b-instant")
 POWERFUL_LLM = os.getenv("POWERFUL_LLM", "qwen-qwq-32b")
+
+CHECKPOINT_TABLES = ["checkpoint_blobs", "checkpoint_writes", "checkpoints"]

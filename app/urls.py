@@ -8,6 +8,7 @@ from django.urls import path
 
 from .views import (
     chatbot_page,
+    clear_chat_history,
     delete_video,
     get_channel_information,
     home_view,
@@ -40,4 +41,5 @@ urlpatterns = [
     # chatbot
     path("chatbot/", chatbot_page, name="chatbot_page"),
     path("send-message/", send_message, name="send_message"),
+    path("clear-chat-history/", clear_chat_history, name="clear_chat_history"),
 ]
