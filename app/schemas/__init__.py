@@ -6,6 +6,7 @@ from .agent import (
     AgentOutputVideos,
     AgentRouterOutput,
     AgentState,
+    ChatMessage,
     InputAgentState,
     OutputAgentState,
 )
@@ -32,4 +33,5 @@ __all__ = [
     "AgentOutputVideos",
     "AgentRouterOutput",
     "AgentOutput",
+    "ChatMessage",
 ]

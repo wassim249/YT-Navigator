@@ -17,9 +17,13 @@ logger = structlog.get_logger(__name__)
 
 @login_required
 @require_http_methods(["GET"])
-def chatbot_page(request):
+async def chatbot_page(request):
     """Render the chatbot page with chat history."""
-    channel = request.user.channel
+    channel = await sync_to_async(lambda: request.user.channel)()
+    user_id = await sync_to_async(lambda: str(request.user.id))()
+
+    graph = await get_graph_instance()
+    chat_history = await graph.get_chat_history(user_id)
 
     try:
 
@@ -28,6 +32,7 @@ def chatbot_page(request):
             "chatbot.html",
             {
                 "channel": channel,
+                "chat_history": chat_history,
             },
         )
     except Exception as e:

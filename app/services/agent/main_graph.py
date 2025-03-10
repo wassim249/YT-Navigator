@@ -3,6 +3,7 @@
 import asyncio
 import os
 import traceback
+from json import JSONDecodeError
 from typing import (
     Any,
     Dict,
@@ -12,6 +13,7 @@ from typing import (
 )
 
 import structlog
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from langchain.output_parsers import PydanticOutputParser
 from langchain.schema import (
@@ -23,6 +25,7 @@ from langchain.tools import StructuredTool
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import (
     BaseMessage,
+    messages_to_dict,
     trim_messages,
 )
 from langchain_groq import ChatGroq
@@ -33,6 +36,7 @@ from langgraph.graph import (
 )
 from langgraph.graph.state import CompiledStateGraph
 from psycopg_pool import AsyncConnectionPool
+from pydantic import ValidationError
 
 from app.models import (
     Channel,
@@ -42,6 +46,7 @@ from app.schemas import (
     AgentOutput,
     AgentRouterOutput,
     AgentState,
+    ChatMessage,
     InputAgentState,
     OutputAgentState,
 )
@@ -456,6 +461,61 @@ class AgentGraph:
             return response
         except Exception as e:
             logger.error("Error processing message", error=e, traceback=traceback.format_exc())
+            raise
+
+    async def get_chat_history(self, user_id: str) -> List[dict]:
+        """Retrieve the chat history for a given thread ID.
+
+        Args:
+            user_id: The ID of the user to fetch history for.
+
+        Returns:
+            List[dict]: List of chat messages in the conversation history.
+        """
+        try:
+            await self.get_pool()
+            state = await sync_to_async(
+                lambda: self.graph.get_state(config={"configurable": {"thread_id": user_id}})
+            )()
+
+            if not state:
+                return []
+
+            original_messages: List[BaseMessage] = state.values.get("messages", [])
+
+            def process_message(msg: Dict[str, Any]) -> Optional[ChatMessage]:
+                """Process a single message from the chat history."""
+                content = msg["data"]["content"].strip()
+                msg_type = msg.get("type")
+
+                if msg_type == "ai" and not msg["data"].get("tool_call") and msg["data"].get("content"):
+                    try:
+                        validated_msg = AgentOutput.model_validate_json(content)
+                        return ChatMessage(
+                            placeholder=validated_msg.placeholder,
+                            videos=validated_msg.videos,
+                            type="ai",
+                        )
+                    except (JSONDecodeError, ValidationError):
+                        return ChatMessage(placeholder=content, videos=None, type="ai")
+
+                elif msg_type == "human":
+                    if '"videos":' in content:
+                        return None
+                    return ChatMessage(placeholder=content, videos=None, type="human")
+
+                return None
+
+            updated_messages = [
+                processed_msg
+                for msg in messages_to_dict(original_messages)
+                if (processed_msg := process_message(msg)) is not None
+            ]
+
+            return updated_messages
+
+        except Exception as e:
+            logger.error("Failed to fetch chat history", type="error", error=str(e))
             raise
 
 
