@@ -95,7 +95,7 @@ class AgentOutput(BaseModel):
     )
     videos: Optional[list[AgentOutputVideos]] = Field(
         ...,
-        description="Choose up to 5 videos that are relevant to the user's request and coherent with your answer.",
+        description="List of relevant videos that address the user's query,Don't Hallucinate videos,limited to actual videos in the channel from the tool results.",
     )
 
     @field_validator("videos", mode="before")
