@@ -37,8 +37,8 @@ class SQLTools:
 
     @classmethod
     def get_tables_schema(cls):
-        """Retrieve the schema information for all relevant database tables, including their names and field types."""
-        project_models = [Channel, User, Video, VideoChunk]
+        """Retrieve the schema information for all relevant database tables, excluding User table."""
+        project_models = [Channel, Video, VideoChunk]  # Removed User model
         tables = []
         for model in project_models:
             table_info = {
@@ -56,11 +56,22 @@ class SQLTools:
 
     @classmethod
     def _format_tables_schema(cls, tables: List[Dict[str, Any]]) -> str:
-        """Format the schema of all tables in the database."""
-        return "\n".join(
-            f"{table['table_name']}: " + ", ".join(f"{f['name']}({f['type']})" for f in table["fields"])
-            for table in tables
-        )
+        """Format tables schema as a concise markdown representation.
+
+        Args:
+            tables: List of table schema dictionaries
+
+        Returns:
+            Markdown formatted string of table schemas
+        """
+        markdown = ""
+        for table in tables:
+            markdown += f"### {table['table_name']}\n"
+            markdown += "| Field | Type |\n|-------|------|\n"
+            for field in table["fields"]:
+                markdown += f"| {field['name']} | {field['type']} |\n"
+            markdown += "\n"
+        return markdown
 
     @classmethod
     async def execute_query(cls, query: str) -> str:
@@ -140,3 +151,13 @@ class SQLTools:
             args_schema=SQLQueryToolInput,
             handle_tool_error=True,
         )
+
+    @classmethod
+    def get_tables_schema_markdown(cls) -> str:
+        """Get database schema as concise markdown, excluding User table.
+
+        Returns:
+            Markdown formatted string of table schemas
+        """
+        tables = cls.get_tables_schema()
+        return cls._format_tables_schema(tables)
