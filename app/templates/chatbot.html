@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block title %}
+    Chatbot
+{% endblock title %}
+
+{% block extra_head %}
+    <!-- Marked library for markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // Fallback markdown parsing if marked is not loaded
+        if (typeof marked === 'undefined') {
+            window.marked = {
+                parse: function(text) {
+                    // Simple markdown-like parsing
+                    return text
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        .replace(/__(.*?)__/g, '<strong>$1</strong>')
+                        .replace(/_(.*?)_/g, '<em>$1</em>')
+                        .replace(/`(.*?)`/g, '<code>$1</code>')
+                        .replace(/\n/g, '<br>');
+                }
+            };
+        }
+    </script>
+{% endblock extra_head %}
+
+{% block content %}
+    <div class="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] flex flex-col antialiased overflow-hidden">
+        <main class="container mx-auto max-w-7xl flex-grow px-4 sm:px-6 lg:px-8 py-8 space-y-6 pb-24 flex flex-col overflow-hidden">
+            <div class="grid grid-cols-3 gap-6 h-[calc(100vh-10rem)]">
+                <!-- Chat Area - Left Column -->
+                <section class="col-span-2 bg-[#1E1E1E] rounded-2xl shadow-xl border border-gray-800 overflow-hidden flex flex-col">
+                    <div id="chat-area" class="p-6 overflow-y-auto flex-grow max-h-[calc(100vh-16rem)] space-y-6 custom-scrollbar">
+                        {% if not chat_history %}
+                            <div class="initial-empty-state text-center py-16 opacity-50 space-y-4">
+                                <i class="fas fa-comments text-6xl text-[var(--muted-text-color)] mb-4"></i>
+                                <p class="text-[var(--muted-text-color)] text-xl font-light tracking-wide">Start exploring channel content</p>
+                            </div>
+                            <div class="flex mb-6 animate-fade-in">
+                                <div class="mr-3 flex-shrink-0">
+                                    <div class="w-8 h-8 rounded-full bg-rose-600 flex items-center justify-center">
+                                        <i class="fab fa-youtube text-white text-sm"></i>
+                                    </div>
+                                </div>
+                                <div class="py-3 px-4 bg-[#2C2C2C] rounded-2xl text-white max-w-2xl">
+                                    How can I help you explore this YouTube channel's content?
+                                </div>
+                            </div>
+                            <div class="flex flex-col space-y-3 items-center justify-center mb-6 pre-prompts-section">
+                                <div class="text-[var(--muted-text-color)] text-sm mb-2">Try one of these quick prompts:</div>
+                                <div class="flex space-x-3 flex-wrap justify-center gap-3">
+                                    <button class="quick-prompt-btn px-4 py-2 bg-rose-900 bg-opacity-30 text-rose-300 rounded-lg text-sm hover:bg-rose-900 hover:text-white transition-all duration-300 max-w-xs text-center whitespace-normal break-words">
+                                        What is the channel's focus?
+                                    </button>
+                                    <button class="quick-prompt-btn px-4 py-2 bg-rose-900 bg-opacity-30 text-rose-300 rounded-lg text-sm hover:bg-rose-900 hover:text-white transition-all duration-300 max-w-xs text-center whitespace-normal break-words">
+                                        Best Moments of the channel
+                                    </button>
+                                    <button class="quick-prompt-btn px-4 py-2 bg-rose-900 bg-opacity-30 text-rose-300 rounded-lg text-sm hover:bg-rose-900 hover:text-white transition-all duration-300 max-w-xs text-center whitespace-normal break-words">
+                                        Most funniest videos of the channel
+                                    </button>
+                                </div>
+                            </div>
+                        {% else %}
+                            {% for message in chat_history %}
+                                {% if message.type == 'human' %}
+                                    <div class="flex justify-end mb-6 animate-fade-in">
+                                        <div class="ml-2 py-3 px-4 bg-rose-900 bg-opacity-30 rounded-2xl text-white max-w-2xl">
+                                            <p class="text-sm">{{ message.placeholder|safe }}</p>
+                                        </div>
+                                        <div class="ml-3 flex-shrink-0">
+                                            <div class="w-8 h-8 rounded-full bg-rose-900 bg-opacity-30 flex items-center justify-center">
+                                                <i class="fas fa-user text-rose-500 text-sm"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% elif message.type == 'ai' and message.placeholder %}
+                                    <div class="flex mb-6 animate-fade-in">
+                                        <div class="mr-3 flex-shrink-0">
+                                            <div class="w-8 h-8 rounded-full bg-rose-600 flex items-center justify-center">
+                                                <i class="fab fa-youtube text-white text-sm"></i>
+                                            </div>
+                                        </div>
+                                        <div class="py-3 px-4 bg-[#2C2C2C] rounded-2xl text-white max-w-2xl">
+                                            {{ message.placeholder|safe }}
+                                            {% if message.response_time %}
+                                                <div class="mt-2 text-xs text-[var(--muted-text-color)] flex items-center">
+                                                    <i class="fas fa-clock mr-1"></i>
+                                                    <span>Response time: {{ message.response_time }}s</span>
+                                                </div>
+                                            {% endif %}
+                                            {% if message.videos %}
+                                                <div class="mt-6 space-y-4">
+                                                    <h3 class="text-sm font-medium text-white border-b border-gray-700 pb-2">Related Videos</h3>
+                                                    {% for video in message.videos %}
+                                                        <div class="bg-[#1E1E1E] rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+                                                            <div class="flex space-x-4">
+                                                                <a href="https://www.youtube.com/watch?v={{ video.id }}" 
+                                                                   target="_blank" 
+                                                                   class="flex-shrink-0">
+                                                                    <img src="{{ video.thumbnail_url }}" 
+                                                                         alt="{{ video.title }}" 
+                                                                         class="w-32 h-18 object-cover"
+                                                                         width="128" height="72"/>
+                                                                </a>
+                                                                <div class="py-2 pr-4 flex-1">
+                                                                    <a href="https://www.youtube.com/watch?v={{ video.id }}" 
+                                                                       target="_blank"
+                                                                       class="font-medium text-sm text-white hover:text-rose-500 transition-colors line-clamp-2 mb-2">
+                                                                        {{ video.title }}
+                                                                    </a>
+                                                                    {% if video.description %}
+                                                                        <p class="text-xs text-[var(--muted-text-color)] mb-2 line-clamp-2">
+                                                                            {{ video.description }}
+                                                                        </p>
+                                                                    {% endif %}
+                                                                    {% if video.timestamps %}
+                                                                        <div class="space-y-1">
+                                                                            {% for ts in video.timestamps %}
+                                                                                <a href="https://www.youtube.com/watch?v={{ video.id }}&t={{ ts.start_time }}s" 
+                                                                                   target="_blank"
+                                                                                   class="block text-xs text-[var(--muted-text-color)] hover:text-rose-500 transition-colors">
+                                                                                    <span class="font-medium">{{ ts.start_time }} - {{ ts.end_time }}</span>
+                                                                                    <span class="mx-1">•</span>
+                                                                                    {{ ts.description }}
+                                                                                </a>
+                                                                            {% endfor %}
+                                                                        </div>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <!-- Fixed Input Area -->
+                    <div class="border-t border-gray-700 p-4 bg-[#2C2C2C]">
+                        <form id="chat-form" method="post" class="relative w-full" action="{% url 'app:send_message' %}" novalidate>
+                            {% csrf_token %}
+                            <div class="flex items-center space-x-3">
+                                <div class="flex-grow">
+                                    <input type="text"
+                                           id="chat-input"
+                                           name="message"
+                                           class="w-full px-4 py-2.5 text-sm border border-gray-700 bg-[#1E1E1E] text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent placeholder-[var(--muted-text-color)] transition-all duration-300"
+                                           placeholder="Ask about the channel's content..."
+                                           autocomplete="off"
+                                           required
+                                           minlength="1"/>
+                                </div>
+                                <div>
+                                    <button type="submit"
+                                            id="send-btn"
+                                            class="inline-flex items-center justify-center w-12 h-12 text-rose-500 bg-rose-950 rounded-xl hover:bg-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all duration-300 group">
+                                        <i id="send-btn-icon" class="fas fa-paper-plane text-lg opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                                        <i id="send-btn-loading" class="hidden fas fa-circle-notch fa-spin text-lg opacity-70"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <div id="progress-indicator" class="hidden mt-2 text-xs text-[var(--muted-text-color)] text-center flex items-center justify-center space-x-2">
+                            <i class="fas fa-circle-notch fa-spin text-rose-500 text-sm"></i>
+                            <span>Processing your message... (Please don't refresh the page)</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Channel Information - Right Column -->
+                {% if channel %}
+                    <section class="col-span-1 bg-[#1E1E1E] rounded-2xl shadow-xl border border-gray-800 overflow-hidden">
+                        <div id="channel-info-header" 
+                             class="px-6 py-5 flex justify-between items-center group hover:bg-[#2C2C2C] transition-colors duration-200">
+                            <h2 class="text-xl font-semibold text-white flex items-center space-x-3">
+                                <i class="fab fa-youtube text-rose-500 text-2xl"></i>
+                                <span class="tracking-tight">Channel Information</span>
+                            </h2>
+                        </div>
+                        <div id="channel-info-content" 
+                             class="border-t border-gray-700 max-h-screen overflow-visible transition-all duration-300 ease-in-out">
+                            <div class="p-8 space-y-6">
+                                <div class="flex flex-col items-center space-y-6">
+                                    {% if channel.profile_image_url %}
+                                        <img src="{{ channel.profile_image_url }}" alt="Channel Profile"
+                                             class="w-32 h-32 rounded-full border-4 border-rose-500 shadow-lg object-cover ring-4 ring-rose-900/50 transform transition-transform hover:scale-105" width="128" height="128"/>
+                                    {% else %}
+                                        <div class="w-32 h-32 rounded-full bg-gray-700 flex items-center justify-center border-4 border-rose-500 shadow-lg ring-4 ring-rose-900/50">
+                                            <i class="fas fa-user text-[var(--muted-text-color)] text-4xl"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="text-center space-y-3 w-full">
+                                        <h3 class="text-2xl font-bold text-white tracking-tight">{{ channel.name }}</h3>
+                                        <p class="text-sm text-rose-300 mb-2">@{{ channel.username }}</p>
+                                        <p class="text-sm text-[var(--muted-text-color)] mb-4 line-clamp-4 px-4">{{ channel.description }}</p>
+                                        <a href="https://www.youtube.com/channel/{{ channel.id }}" target="_blank"
+                                           class="inline-flex items-center px-5 py-2.5 bg-rose-900 text-rose-300 rounded-lg hover:bg-rose-800 hover:text-rose-200 transition-all duration-300 group">
+                                            <i class="fas fa-external-link-alt mr-3 opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                                            View Channel
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                {% else %}
+                    <section class="col-span-1 bg-[#1E1E1E] rounded-2xl border border-gray-800 flex items-center justify-center">
+                        <div class="bg-yellow-900/20 border-l-4 border-yellow-400 p-5 rounded-lg shadow-md flex items-center space-x-4">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-yellow-100">No channel information available. Select a channel to begin.</p>
+                            </div>
+                        </div>
+                    </section>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <style>
+        /* Custom scrollbar styles */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #2C2C2C;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #6B2E4A; /* Deep rose color */
+            border-radius: 10px;
+            border: 2px solid #2C2C2C;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #8B3D5F; /* Lighter rose color on hover */
+        }
+
+        /* Remove global scrollbar */
+        body, html {
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        /* Error message styles */
+        .error-message {
+            background-color: rgba(220, 38, 38, 0.1);
+            border-left: 4px solid rgb(220, 38, 38);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            color: rgb(254, 202, 202);
+        }
+
+        .rate-limit-error {
+            background-color: rgba(234, 179, 8, 0.1);
+            border-left-color: rgb(234, 179, 8);
+            color: rgb(253, 224, 71);
+        }
+
+        .error-message i {
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const chatArea = document.getElementById('chat-area');
+
+            // Focus the chat input when the page loads
+            chatInput.focus();
+
+            // Scroll chat area to bottom on page load
+            if (chatArea) {
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+
+            // Function to add a message to the chat area
+            function addMessageToChatArea(message, isUser = false, videos = [], responseTime = null) {
+                // Remove initial empty state if it exists
+                const initialEmptyState = chatArea.querySelector('.initial-empty-state');
+                if (initialEmptyState) {
+                    initialEmptyState.remove();
+                }
+
+                // Remove pre-prompts if they exist
+                const prePromptsSection = chatArea.querySelector('.pre-prompts-section');
+                if (prePromptsSection) {
+                    prePromptsSection.remove();
+                }
+
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('flex', 'mb-6', 'animate-fade-in');
+                
+                if (isUser) {
+                    // User message styling
+                    messageDiv.classList.add('justify-end');
+                    messageDiv.innerHTML = `
+                            <div class="ml-2 py-3 px-4 bg-rose-900 bg-opacity-30 rounded-2xl text-white max-w-2xl">
+                                <p class="text-sm">${message}</p>
+                            </div>
+                            <div class="ml-3 flex-shrink-0">
+                                <div class="w-8 h-8 rounded-full bg-rose-900 bg-opacity-30 flex items-center justify-center">
+                                    <i class="fas fa-user text-rose-500 text-sm"></i>
+                                </div>
+                            </div>
+                    `;
+                } else {
+                    // AI message styling with optional video rendering
+                    let videoHTML = '';
+                    if (videos && videos.length > 0) {
+                        videoHTML = `
+                            <div class="mt-6 space-y-4">
+                                <h3 class="text-sm font-medium text-white border-b border-gray-700 pb-2">Related Videos</h3>
+                                ${videos.map(video => `
+                                    <div class="bg-[#1E1E1E] rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+                                        <div class="flex space-x-4">
+                                            <a href="https://www.youtube.com/watch?v=${video.id}" 
+                                               target="_blank" 
+                                               class="flex-shrink-0">
+                                                <img src="${video.thumbnail_url}" 
+                                                     alt="${video.title}" 
+                                                     class="w-32 h-18 object-cover"
+                                                     width="128" height="72"/>
+                                            </a>
+                                            <div class="py-2 pr-4 flex-1">
+                                                <a href="https://www.youtube.com/watch?v=${video.id}" 
+                                                   target="_blank"
+                                                   class="font-medium text-sm text-white hover:text-rose-500 transition-colors line-clamp-2 mb-2">
+                                                    ${video.title}
+                                                </a>
+                                                ${video.description ? `
+                                                    <p class="text-xs text-[var(--muted-text-color)] mb-2 line-clamp-2">
+                                                        ${video.description}
+                                                    </p>
+                                                ` : ''}
+                                                ${video.timestamps ? `
+                                                    <div class="space-y-1">
+                                                        ${video.timestamps.map(ts => `
+                                                            <a href="https://www.youtube.com/watch?v=${video.id}&t=${ts.start}s" 
+                                                               target="_blank"
+                                                               class="block text-xs text-[var(--muted-text-color)] hover:text-rose-500 transition-colors">
+                                                                <span class="font-medium">${ts.start} - ${ts.end}</span>
+                                                                <span class="mx-1">•</span>
+                                                                ${ts.description}
+                                                            </a>
+                                                        `).join('')}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+
+                    messageDiv.innerHTML = `
+                        <div class="flex mb-6 animate-fade-in">
+                            <div class="mr-3 flex-shrink-0">
+                                <div class="w-8 h-8 rounded-full bg-rose-600 flex items-center justify-center">
+                                    <i class="fab fa-youtube text-white text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="py-3 px-4 bg-[#2C2C2C] rounded-2xl text-white max-w-2xl">
+                                ${marked.parse(message)}
+                                ${responseTime ? `
+                                    <div class="mt-2 text-xs text-[var(--muted-text-color)] flex items-center">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span>Response time: ${responseTime.toFixed(2)}s</span>
+                                    </div>
+                                ` : ''}
+                                ${videoHTML}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                chatArea.appendChild(messageDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+
+            // Function to handle chat submission
+            async function handleChatSubmission(event) {
+                event.preventDefault();
+                const message = chatInput.value.trim();
+                
+                if (!message) {
+                    alert('Please enter a message');
+                    return;
+                }
+
+                // Add user message to chat area
+                addMessageToChatArea(message, true);
+                
+                // Start timing the request
+                const startTime = performance.now();
+                
+                // Disable input during processing
+                chatInput.disabled = true;
+                document.getElementById('send-btn').disabled = true;
+                document.getElementById('send-btn-icon').classList.add('hidden');
+                document.getElementById('send-btn-loading').classList.remove('hidden');
+                document.getElementById('progress-indicator').classList.remove('hidden');
+                
+                try {
+                    const formData = new FormData(chatForm);
+                    formData.append('message', message);    
+                    const response = await fetch('{% url "app:send_message" %}', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    let data = await response.json();
+
+                    if (data.error) {
+                        throw {
+                            status: response.status,
+                            response: data.response
+                        };
+                    }
+
+                    // Calculate response time
+                    const endTime = performance.now();
+                    const responseTime = (endTime - startTime) / 1000;  // Convert to seconds
+
+                    // str to dict
+                    data = JSON.parse(data);
+                    console.log(data);
+
+                    // Add AI response to chat area
+                    addMessageToChatArea(data.placeholder, false, data.videos, responseTime);
+
+                } catch (error) {
+                    console.error('Chat error:', error);
+                    let errorMessage = error.response;
+                    let errorStatus = error.status;
+                    
+                    // If error doesn't have response/status (e.g. network error), use defaults
+                    if (!errorMessage) {
+                        errorMessage = 'Network error occurred. Please check your connection.';
+                        errorStatus = 0;
+                    }
+                    
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = `error-message ${errorStatus === 429 ? 'rate-limit-error' : ''}`;
+                    
+                    const icon = document.createElement('i');
+                    icon.className = `fas ${errorStatus === 429 ? 'fa-clock' : 'fa-exclamation-circle'} mr-2`;
+                    errorDiv.appendChild(icon);
+                    
+                    const messageText = document.createTextNode(errorMessage);
+                    errorDiv.appendChild(messageText);
+                    
+                    const messageContainer = document.createElement('div');
+                    messageContainer.className = 'flex mb-6 animate-fade-in';
+                    messageContainer.appendChild(errorDiv);
+                    
+                    chatArea.appendChild(messageContainer);
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                } finally {
+                    // Re-enable input
+                    chatInput.disabled = false;
+                    document.getElementById('send-btn').disabled = false;
+                    document.getElementById('send-btn-icon').classList.remove('hidden');
+                    document.getElementById('send-btn-loading').classList.add('hidden');
+                    document.getElementById('progress-indicator').classList.add('hidden');
+                    chatInput.value = '';
+                    // Focus the input after request is complete
+                    chatInput.focus();
+                }
+            }
+
+            // Event listener for chat form submission
+            chatForm.addEventListener('submit', handleChatSubmission);
+
+            // Quick prompt buttons event listener
+            const quickPromptButtons = document.querySelectorAll('.quick-prompt-btn');
+            quickPromptButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const promptText = this.textContent.trim();
+                    chatInput.value = promptText;
+                    chatForm.dispatchEvent(new Event('submit'));
+                });
+            });
+        });
+    </script>
+
+{% endblock content %}
