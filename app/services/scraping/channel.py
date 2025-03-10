@@ -129,19 +129,19 @@ class ChannelScraper:
                 channel, created = await sync_to_async(Channel.objects.get_or_create, thread_sensitive=True)(
                     id=channel_data["id"],
                     defaults={
-                        "name": channel_data["name"],
-                        "thumbnail": channel_data["thumbnail"],
-                        "subscribers": channel_data["subscribers"],
-                        "last_updated": timezone.now(),
+                        "name": channel_data.get("name", "Unknown Channel"),
+                        "profile_image_url": channel_data.get("profile_image_url", "N/A"),
+                        "description": channel_data.get("description", "N/A"),
+                        "username": channel_username,
                     },
                 )
 
                 # Update channel if it already exists
                 if not created:
-                    channel.name = channel_data["name"]
-                    channel.thumbnail = channel_data["thumbnail"]
-                    channel.subscribers = channel_data["subscribers"]
-                    channel.last_updated = timezone.now()
+                    channel.name = channel_data.get("name", "Unknown Channel")
+                    channel.profile_image_url = channel_data.get("profile_image_url", "N/A")
+                    channel.description = channel_data.get("description", "N/A")
+                    channel.username = channel_username
                     await sync_to_async(channel.save, thread_sensitive=True)()
 
                 logger.info(
@@ -208,6 +208,7 @@ class ChannelScraper:
             if "youtube.com/channel/" in metadata["url"]:
                 metadata["id"] = metadata["url"].split("https://www.youtube.com/channel/")[1]
 
+            logger.info("Channel metadata extracted successfully", metadata=metadata)
             return metadata
         except Exception as e:
             logger.error("Failed to extract channel metadata", error=e)
