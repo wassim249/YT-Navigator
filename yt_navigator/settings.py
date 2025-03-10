@@ -220,3 +220,5 @@ INSTANT_LLM = os.getenv("INSTANT_LLM", "llama-3.1-8b-instant")
 POWERFUL_LLM = os.getenv("POWERFUL_LLM", "qwen-qwq-32b")
 
 CHECKPOINT_TABLES = ["checkpoint_blobs", "checkpoint_writes", "checkpoints"]
+
+SCRAPER_WORKERS_NUM = os.getenv("SCRAPER_WORKERS_NUM", os.cpu_count())
