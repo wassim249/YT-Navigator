@@ -1,9 +1,11 @@
 """Views for the scan feature."""
 
+import asyncio
 import traceback
 from functools import lru_cache
 
 from asgiref.sync import sync_to_async
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
@@ -18,8 +20,22 @@ logger = get_logger(__name__)
 
 @lru_cache(maxsize=1)
 def get_youtube_scraper():
-    """Get the YouTube scraper."""
-    return YoutubeScraper()
+    """Get the YouTube scraper.
+
+    Returns:
+        YoutubeScraper: A singleton instance of the YouTube scraper.
+    """
+    try:
+        # Create a new scraper with default settings
+        return YoutubeScraper(
+            workers_num=settings.SCRAPER_WORKERS_NUM,
+            max_transcript_segment_duration=settings.MAX_TRANSCRIPT_SEGMENT_DURATION,
+            request_timeout=settings.SCRAPER_REQUEST_TIMEOUT,
+        )
+    except Exception as e:
+        logger.error("Error creating YouTube scraper", error=str(e), traceback=traceback.format_exc())
+        # Return a default scraper as fallback
+        return YoutubeScraper()
 
 
 @lru_cache(maxsize=1)
@@ -55,38 +71,55 @@ async def get_channel_information(request):
             return redirect("app:home")
 
         try:
-            channel_username = await sync_to_async(get_youtube_scraper().validate_channel_link)(
+            # Get the current event loop
+            current_loop = asyncio.get_running_loop()
+            logger.debug("Processing channel information in event loop", loop_id=id(current_loop))
+
+            # Get a YouTube scraper instance
+            scraper = get_youtube_scraper()
+
+            # Validate the channel link
+            try:
+                channel_username = await sync_to_async(scraper.validate_channel_link, thread_sensitive=True)(
+                    channel_link,
+                )
+            except ValueError as e:
+                logger.warning("Invalid channel link", error=str(e), channel_link=channel_link)
+                messages.error(request, str(e))
+                return redirect("app:home")
+
+            # Get channel data
+            channel = await scraper.get_channel_data(
                 channel_link,
+                channel_username,
             )
-        except ValueError as e:
-            logger.warning("Invalid channel link", error=str(e), channel_link=channel_link)
-            messages.error(request, str(e))
-            return redirect("app:home")
 
-        channel = await get_youtube_scraper().get_channel_data(
-            channel_link,
-            channel_username,
-        )
+            if channel:
+                # Update user's channel
+                try:
+                    await sync_to_async(lambda: setattr(request.user, "channel", channel), thread_sensitive=True)()
+                    await sync_to_async(request.user.save, thread_sensitive=True)()
 
-        if channel:
-            # Update user's channel
-            await sync_to_async(lambda: setattr(request.user, "channel", channel))()
-            await sync_to_async(request.user.save)()
-
-            logger.info("Channel information fetched successfully", channel_id=channel.id)
-            messages.success(request, f"Successfully connected to channel: {channel.name}")
-            return redirect("app:home")
-        else:
-            logger.error("Failed to fetch channel information", channel_link=channel_link)
-            messages.error(request, "Failed to fetch channel information.")
-            return redirect("app:home")
-
+                    logger.info("Channel information fetched successfully", channel_id=channel.id)
+                    messages.success(request, f"Successfully connected to channel: {channel.name}")
+                except Exception as e:
+                    logger.error("Error updating user channel", error=str(e), traceback=traceback.format_exc())
+                    messages.error(request, "Error connecting to channel. Please try again.")
+            else:
+                logger.error("Failed to fetch channel information", channel_link=channel_link)
+                messages.error(request, "Could not fetch channel information. Please try again.")
+        except RuntimeError as e:
+            if "Event loop is closed" in str(e):
+                logger.error("Event loop closed during channel processing", error=str(e))
+                messages.error(request, "An error occurred. Please try again.")
+            else:
+                logger.error("Runtime error processing channel", error=str(e), traceback=traceback.format_exc())
+                messages.error(request, "An unexpected error occurred. Please try again.")
     except Exception as e:
-        import traceback
-
         logger.error("Unexpected error in get_channel_information", error=str(e), traceback=traceback.format_exc())
-        messages.error(request, f"An error occurred: {str(e)}")
-        return redirect("app:home")
+        messages.error(request, "An unexpected error occurred. Please try again.")
+
+    return redirect("app:home")
 
 
 @login_required
