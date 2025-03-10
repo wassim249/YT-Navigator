@@ -39,11 +39,9 @@ class ModelManager:
         self._cross_encoder = None
 
         # Set optimal torch settings for inference
-        if self.device.type == "cuda" and config.ENABLE_CUDA_OPTIMIZATIONS:
-            if config.CUDA_BENCHMARK:
-                torch.backends.cudnn.benchmark = True
-            if config.ENABLE_TF32:
-                torch.backends.cuda.matmul.allow_tf32 = True
+        if self.device.type == "cuda":
+            torch.backends.cudnn.benchmark = True
+            torch.backends.cuda.matmul.allow_tf32 = True
             logger.info("CUDA optimizations enabled")
 
     @property
@@ -55,11 +53,11 @@ class ModelManager:
             CrossEncoder: The cross-encoder model instance.
         """
         if self._cross_encoder is None:
-            model_name = config.DEFAULT_MODEL_NAME
+            model_name = config.RANKER_MODEL_NAME
             logger.info("Loading cross-encoder model", model_name=model_name)
             try:
                 self._cross_encoder = CrossEncoder(
-                    model_name, max_length=config.MAX_SEQUENCE_LENGTH, device=self.device
+                    model_name, max_length=config.RANKER_MAX_SEQUENCE_LENGTH, device=self.device
                 )
                 logger.info("Cross-encoder model loaded successfully")
             except Exception as e:
