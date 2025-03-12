@@ -15,6 +15,7 @@ dependencies = [
     "gunicorn==21.2.0",
     "psycopg2-binary==2.9.10",
     "asyncpg==0.30.0",
+    "torch==2.6.0",
     "sentence-transformers==3.4.1",
     "rank_bm25==0.2.2",
     "python-dotenv==1.0.1",
@@ -23,27 +24,31 @@ dependencies = [
     "scrapetube==2.5.1",
     "bs4==0.0.2",
     "httpx==0.28.1",
-    "torch==2.6.0",
-    "langchain-core==0.3.37",
-    "langchain-huggingface==0.1.2",
-    "langchain-postgres==0.0.7",
+    "langchain-huggingface",
+    "langchain-postgres",
     "langchain-community==0.3.17",
     "langgraph==0.3.5",
     "langchain-groq==0.2.5",
-    "langgraph-checkpoint-postgres==2.0.16"
+    "langgraph-checkpoint-postgres==2.0.16",
+    "markdown2==2.5.3",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-django", "black", "isort", "flake8", "ruff", "djlint==1.36.4"]
-
-[tool.setuptools]
-packages = [
-    "yt_navigator",
-    "app",
+dev = [
+    "pytest",
+    "pytest-django",
+    "black",
+    "isort",
+    "flake8",
+    "ruff",
+    "djlint==1.36.4",
 ]
 
+[tool.setuptools]
+packages = ["yt_navigator", "app"]
+
 [tool.setuptools.dynamic]
-version = {file = "version.txt"}
+version = { file = "version.txt" }
 
 
 [tool.pytest.ini_options]
@@ -87,7 +92,7 @@ ignore = "migrations"
 
 [tool.ruff]
 line-length = 119
-exclude = ["migrations","*.ipynb"]
+exclude = ["migrations", "*.ipynb", "venv"]
 
 [tool.ruff.lint]
 # Enable flake8-bugbear (`B`) rules and docstring (`D`) rules
