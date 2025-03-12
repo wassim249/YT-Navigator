@@ -1,6 +1,7 @@
 """Model manager for the chunks reranker."""
 
 import os
+import traceback
 from functools import lru_cache
 from typing import Optional
 
@@ -57,11 +58,14 @@ class ModelManager:
             logger.info("Loading cross-encoder model", model_name=model_name)
             try:
                 self._cross_encoder = CrossEncoder(
-                    model_name, max_length=config.RANKER_MAX_SEQUENCE_LENGTH, device=self.device
+                    model_name,
+                    max_length=config.RANKER_MAX_SEQUENCE_LENGTH,
+                    device=self.device,
+                    cache_dir=os.environ.get("HF_HOME"),
                 )
                 logger.info("Cross-encoder model loaded successfully")
             except Exception as e:
-                logger.error("Error loading cross-encoder model", error=e)
+                logger.error("Error loading cross-encoder model", error=e, traceback=traceback.format_exc())
                 raise
         return self._cross_encoder
 

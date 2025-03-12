@@ -135,6 +135,7 @@ class AgentGraph:
             min_size=1,
             timeout=60,
             open=False,  # Don't open in constructor to avoid deprecation warning
+            kwargs={"autocommit": True},  # Set autocommit to True to allow CREATE INDEX CONCURRENTLY
         )
 
         # Open the pool explicitly as recommended in the deprecation warning

@@ -5,7 +5,6 @@ import traceback
 from functools import lru_cache
 
 from asgiref.sync import sync_to_async
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
@@ -27,11 +26,7 @@ def get_youtube_scraper():
     """
     try:
         # Create a new scraper with default settings
-        return YoutubeScraper(
-            workers_num=settings.SCRAPER_WORKERS_NUM,
-            max_transcript_segment_duration=settings.MAX_TRANSCRIPT_SEGMENT_DURATION,
-            request_timeout=settings.SCRAPER_REQUEST_TIMEOUT,
-        )
+        return YoutubeScraper()
     except Exception as e:
         logger.error("Error creating YouTube scraper", error=str(e), traceback=traceback.format_exc())
         # Return a default scraper as fallback

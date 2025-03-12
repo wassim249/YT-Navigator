@@ -6,6 +6,7 @@ managing database instances, and handling document operations.
 
 import asyncio
 import json
+import os
 import traceback
 from functools import lru_cache
 from typing import (
@@ -78,10 +79,15 @@ class VectorDatabaseService:
         Returns:
             HuggingFaceEmbeddings: The embeddings model.
         """
-        return HuggingFaceEmbeddings(
-            model_name=settings.EMBEDDING_MODEL,
-            model_kwargs={"device": self.device},
-        )
+        try:
+            return HuggingFaceEmbeddings(
+                model_name=settings.EMBEDDING_MODEL,
+                model_kwargs={"device": self.device},
+                cache_folder=os.environ.get("HF_HOME"),
+            )
+        except Exception as e:
+            logger.error("Failed to initialize embeddings model", error=e, traceback=traceback.format_exc())
+            raise
 
     def _get_optimal_device(self) -> str:
         """Determine the optimal device for model inference.
