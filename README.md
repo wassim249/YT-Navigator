@@ -167,8 +167,20 @@ make dev # for development
 make prod # for production
 ```
 ### 🐳 With Docker
-To be implemented.
+1. Create a `.env` file in the root directory from the `.env.example` file (Make sure you set *POSTGRES_HOST=db*).
+```bash
+cp .env.example .env
+```
 
+2. Build the Docker image
+```bash
+make build-docker
+```
+
+3. Run the Docker container
+```bash
+make run-docker
+```
 ## 📖 Usage
 
 ### 1. 📝 Register and Login
