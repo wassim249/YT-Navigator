@@ -111,6 +111,10 @@ graph TD
 ```
 </details>
 
+### 4. Agent Workflow Diagram
+
+![Agent Workflow Diagram](./images/agent_workflow.jpg)
+
 
 ## 🧰 Technology Stack
 
