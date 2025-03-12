@@ -1,0 +1,47 @@
+# System files
+**/.DS_Store
+
+# Version control
+**/.git
+**/.gitignore
+
+# IDE and editor files
+**/.vscode
+**/.settings
+**/.project
+**/.classpath
+**/*.*proj.user
+
+# Docker files
+**/Dockerfile*
+**/docker-compose*
+**/compose.y*ml
+
+# Cache and compiled files
+**/__pycache__
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+**/.cursor
+**/.langgraph_api
+**/bin
+
+# Development and environment files
+.env
+**/secrets.dev.yaml
+**/venv
+**/*.egg-info
+**/*.ipynb
+**/*.jsonl
+
+# Documentation and config
+**/LICENSE
+**/CHANGELOG.md
+**/README.Docker.md
+**/.pre-commit-config.yaml
+
+# Test files
+**/tests
+
+# Other
+**/images
