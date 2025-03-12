@@ -40,6 +40,12 @@ install-hooks:
 run-hooks:
 	pre-commit run --all-files
 
+build-docker:
+	docker compose --env-file .env up  --build
+
+run-docker:
+	docker compose --env-file .env up
+
 help:
 	@echo "Available commands:"
 	@echo "  makemigrations   - Create new migrations based on changes"
