@@ -39,30 +39,7 @@ class Channel(models.Model):
         # Execute the query
         count = await get_video_count()
 
-        return f"""
-        ID: {self.id}
-        Name: {self.name}
-        Username: {self.username}
-        Description: {self.description}
-        Scanned Videos Count: {count}
-        """
-
-    def pretty_str_sync(self):
-        """Returns a pretty string representation of the channel (synchronous version).
-
-        This method is used for background tasks where async operations might be problematic.
-        """
-        # Execute the query synchronously
-        count = Video.objects.filter(channel=self).count()
-
-        return f"""
-        ID: {self.id}
-        Name: {self.name}
-        Username: {self.username}
-        Description: {self.description}
-        Scanned Videos Count: {count}
-        """
-
+        return f"""ID: {self.id}\nName: {self.name}\nUsername: {self.username}\nDescription: {self.description}\nScanned Videos Count: {count}"""
     class Meta:
         """Metadata options for the Channel model."""
 

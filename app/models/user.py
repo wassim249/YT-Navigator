@@ -19,7 +19,7 @@ class User(AbstractUser):
         Returns:
             str: A formatted string with the user's username and email.
         """
-        return f"""username: {self.username} , email: {self.email}"""
+        return f"""USERNAME: {self.username}\nEMAIL: {self.email}"""
 
     def dict(self):
         """Converts the user model instance to a dictionary.
