@@ -1,6 +1,8 @@
 """Channel model for YouTube channels."""
 
+from asgiref.sync import sync_to_async
 from django.db import models
+from django.db.models import Count
 
 from app.models.video import Video
 
@@ -31,13 +33,34 @@ class Channel(models.Model):
 
     async def pretty_str(self):
         """Returns a pretty string representation of the channel."""
-        scanned_videos_count = await Video.objects.filter(channel=self).acount()
+        # Create a thread-sensitive sync_to_async function
+        get_video_count = sync_to_async(lambda: Video.objects.filter(channel=self).count(), thread_sensitive=True)
+
+        # Execute the query
+        count = await get_video_count()
+
         return f"""
         ID: {self.id}
         Name: {self.name}
         Username: {self.username}
         Description: {self.description}
-        Scanned Videos Count: {scanned_videos_count}
+        Scanned Videos Count: {count}
+        """
+
+    def pretty_str_sync(self):
+        """Returns a pretty string representation of the channel (synchronous version).
+
+        This method is used for background tasks where async operations might be problematic.
+        """
+        # Execute the query synchronously
+        count = Video.objects.filter(channel=self).count()
+
+        return f"""
+        ID: {self.id}
+        Name: {self.name}
+        Username: {self.username}
+        Description: {self.description}
+        Scanned Videos Count: {count}
         """
 
     class Meta:

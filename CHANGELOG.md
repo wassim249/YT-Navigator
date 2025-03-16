@@ -1,10 +1,9 @@
 # Changelog
 
-## 0.1.1 - 2025-03-12
+## 0.1.2 - 2025-03-16
 
 ### Added
-- Added Docker support
-
+- Added Langsmith dataset creation and example addition
 ### Known Issues
 - Poor exception handling
 - UI responsiveness issues on mobile devices

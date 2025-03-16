@@ -27,22 +27,17 @@ class AgentRouterOutput(BaseModel):
     answer: Literal["Yes", "No", "Not relevant"]
 
 
-class OutputAgentState(BaseModel):
-    """The output state of the agent."""
+class InputAgentState(BaseModel):
+    """The input state of the agent."""
 
     messages: Annotated[Sequence[BaseMessage], add_messages]
+    channel: Union[Channel, dict]
+    user: Union[SimpleLazyObject, object]
 
     class Config:
         """Config for the output agent state."""
 
         arbitrary_types_allowed = True
-
-
-class InputAgentState(OutputAgentState):
-    """The input state of the agent."""
-
-    channel: Union[Channel, dict]
-    user: Union[SimpleLazyObject, object]
 
 
 class AgentState(InputAgentState):
