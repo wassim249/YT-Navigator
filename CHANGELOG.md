@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.1.2 - 2025-03-16
+## 0.1.3 - 2025-03-16
 
 ### Added
-- Added Langsmith dataset creation and example addition
+- Added MongoDB evaluation database
+
 ### Known Issues
 - Poor exception handling
 - UI responsiveness issues on mobile devices
