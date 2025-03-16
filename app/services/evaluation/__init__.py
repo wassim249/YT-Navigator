@@ -1,5 +1,5 @@
 """This module contains the evaluation services for the YT Navigator model."""
 
-from .langsmith_evaluation_service import LangsmithEvaluationService
+from .mongodb_eval_db import MongoDBEvalDB
 
-__all__ = ["LangsmithEvaluationService"]
+__all__ = ["MongoDBEvalDB"]

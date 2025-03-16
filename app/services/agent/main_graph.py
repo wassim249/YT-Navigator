@@ -54,7 +54,7 @@ from app.services.agent.prompts import (
     ROUTE_QUERY_SYSTEM_PROMPT,
 )
 from app.services.agent.react_graph import react_agent
-from app.services.evaluation.langsmith_evaluation_service import LangsmithEvaluationService
+from app.services.evaluation import MongoDBEvalDB
 from app.services.vector_database.tools import (
     SQLTools,
     VectorDatabaseTools,
@@ -88,8 +88,6 @@ class AgentGraph:
         self.graph = None
         logger.info("AgentGraph initialized successfully")
 
-        self.evaluator = LangsmithEvaluationService()
-
     async def setup(self):
         """Setup the checkpointer and initialize the graph.
 
@@ -111,6 +109,15 @@ class AgentGraph:
         self.conn_pool = await self.get_pool()
         self.checkpointer = AsyncPostgresSaver(self.conn_pool)
         await self.checkpointer.setup()
+
+        if os.getenv("MONGO_DB_EVALUATION_URI"):
+            try:
+                self.evaluator = MongoDBEvalDB()
+            except Exception as e:
+                logger.error("Error initializing MongoDBEvalDB", error=e, traceback=traceback.format_exc())
+                self.evaluator = None
+        else:
+            self.evaluator = None
 
         # Build the graph
         self.graph = self.build_graph()
@@ -167,7 +174,7 @@ class AgentGraph:
                 [
                     SystemMessage(
                         content=ROUTE_QUERY_SYSTEM_PROMPT.format(
-                            channel=state.channel.pretty_str(),
+                            channel=await state.channel.pretty_str(),
                             tools=self._pretty_str_tools(self.tools),
                             format_instructions=output_parser.get_format_instructions(),
                         )
@@ -392,16 +399,14 @@ class AgentGraph:
 
             logger.info("Agent graph execution completed successfully")
 
-            # Create and track the background task
-            task = asyncio.create_task(self._background_add_example(result))
-            # Ensure the task is not garbage collected
-            task.add_done_callback(
-                lambda t: logger.info(
-                    "Background task completed"
-                    if not t.exception()
-                    else logger.error("Background task failed", error=t.exception())
-                )
-            )
+            if self.evaluator:
+                try:
+                    # Directly call the evaluation method instead of creating a task
+                    await self._add_evaluation_example(result)
+                    logger.info("Evaluation example added successfully")
+                except Exception as e:
+                    logger.error("Failed to add evaluation example", error=e, traceback=traceback.format_exc())
+
             return result
         except RuntimeError as e:
             logger.error("Runtime error in agent graph", error=e, traceback=traceback.format_exc())
@@ -410,37 +415,18 @@ class AgentGraph:
             logger.error("Error in agent graph", error=e, traceback=traceback.format_exc())
             raise
 
-    async def _background_add_example(self, result: Dict[str, Any]):
-        """Add example to the dataset in the background.
+    async def _add_evaluation_example(self, result: InputAgentState):
+        """Add an example to the evaluation dataset.
 
         Args:
-            result: The result from the agent graph execution
+            result: The result of the agent invocation.
         """
         try:
-            # Use the synchronous version to avoid async issues
-            import threading
-
-            def run_in_thread():
-                try:
-                    self.evaluator.add_example_sync(result)
-                    logger.info("Successfully added example to dataset in background thread")
-                except Exception as e:
-                    logger.error(
-                        "Error adding example to dataset in background thread",
-                        error=e,
-                        traceback=traceback.format_exc(),
-                    )
-
-            # Start a new thread to handle the synchronous operation
-            thread = threading.Thread(target=run_in_thread)
-            thread.daemon = True  # Allow the thread to exit when the main program exits
-            thread.start()
-
-            logger.info("Started background thread for adding example to dataset")
+            if self.evaluator:
+                await self.evaluator.add_evaluation(result)
+                logger.info("Successfully added example to dataset")
         except Exception as e:
-            logger.error(
-                "Error setting up background thread for adding example", error=e, traceback=traceback.format_exc()
-            )
+            logger.error("Error adding example to dataset", error=e, traceback=traceback.format_exc())
 
     @staticmethod
     def extract_response(result: Dict[str, Any]) -> Optional[str]:

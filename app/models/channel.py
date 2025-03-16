@@ -40,6 +40,7 @@ class Channel(models.Model):
         count = await get_video_count()
 
         return f"""ID: {self.id}\nName: {self.name}\nUsername: {self.username}\nDescription: {self.description}\nScanned Videos Count: {count}"""
+
     class Meta:
         """Metadata options for the Channel model."""
 
