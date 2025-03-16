@@ -48,13 +48,13 @@ from app.schemas import (
     AgentState,
     ChatMessage,
     InputAgentState,
-    OutputAgentState,
 )
 from app.services.agent.prompts import (
     NON_TOOL_CALLS_SYSTEM_PROMPT,
     ROUTE_QUERY_SYSTEM_PROMPT,
 )
 from app.services.agent.react_graph import react_agent
+from app.services.evaluation.langsmith_evaluation_service import LangsmithEvaluationService
 from app.services.vector_database.tools import (
     SQLTools,
     VectorDatabaseTools,
@@ -87,6 +87,8 @@ class AgentGraph:
         self.checkpointer = None
         self.graph = None
         logger.info("AgentGraph initialized successfully")
+
+        self.evaluator = LangsmithEvaluationService()
 
     async def setup(self):
         """Setup the checkpointer and initialize the graph.
@@ -165,7 +167,7 @@ class AgentGraph:
                 [
                     SystemMessage(
                         content=ROUTE_QUERY_SYSTEM_PROMPT.format(
-                            channel=await state.channel.pretty_str(),
+                            channel=state.channel.pretty_str(),
                             tools=self._pretty_str_tools(self.tools),
                             format_instructions=output_parser.get_format_instructions(),
                         )
@@ -321,7 +323,7 @@ class AgentGraph:
         """
         logger.info("Building agent graph")
         try:
-            graph = StateGraph(input=InputAgentState, state_schema=AgentState, output=OutputAgentState)
+            graph = StateGraph(input=InputAgentState, state_schema=AgentState)
 
             graph.add_node("route_message", self.route_message)
             graph.add_node("tool_calls_reply", react_agent)
@@ -389,21 +391,56 @@ class AgentGraph:
             result = await self.graph.ainvoke(initial_state, config)
 
             logger.info("Agent graph execution completed successfully")
+
+            # Create and track the background task
+            task = asyncio.create_task(self._background_add_example(result))
+            # Ensure the task is not garbage collected
+            task.add_done_callback(
+                lambda t: logger.info(
+                    "Background task completed"
+                    if not t.exception()
+                    else logger.error("Background task failed", error=t.exception())
+                )
+            )
             return result
         except RuntimeError as e:
-            if "is bound to a different event loop" in str(e):
-                logger.error("Event loop error in agent graph", error=e, traceback=traceback.format_exc())
-                # Recreate the graph and checkpointer in the current event loop
-                logger.info("Reinitializing agent graph in current event loop")
-                await self.setup()
-                # Try again with the newly initialized components
-                return await self.invoke(message, channel, user)
-            else:
-                logger.error("Runtime error invoking agent graph", error=e, traceback=traceback.format_exc())
-                raise
-        except Exception as e:
-            logger.error("Error invoking agent graph", error=e, traceback=traceback.format_exc())
+            logger.error("Runtime error in agent graph", error=e, traceback=traceback.format_exc())
             raise
+        except Exception as e:
+            logger.error("Error in agent graph", error=e, traceback=traceback.format_exc())
+            raise
+
+    async def _background_add_example(self, result: Dict[str, Any]):
+        """Add example to the dataset in the background.
+
+        Args:
+            result: The result from the agent graph execution
+        """
+        try:
+            # Use the synchronous version to avoid async issues
+            import threading
+
+            def run_in_thread():
+                try:
+                    self.evaluator.add_example_sync(result)
+                    logger.info("Successfully added example to dataset in background thread")
+                except Exception as e:
+                    logger.error(
+                        "Error adding example to dataset in background thread",
+                        error=e,
+                        traceback=traceback.format_exc(),
+                    )
+
+            # Start a new thread to handle the synchronous operation
+            thread = threading.Thread(target=run_in_thread)
+            thread.daemon = True  # Allow the thread to exit when the main program exits
+            thread.start()
+
+            logger.info("Started background thread for adding example to dataset")
+        except Exception as e:
+            logger.error(
+                "Error setting up background thread for adding example", error=e, traceback=traceback.format_exc()
+            )
 
     @staticmethod
     def extract_response(result: Dict[str, Any]) -> Optional[str]:
