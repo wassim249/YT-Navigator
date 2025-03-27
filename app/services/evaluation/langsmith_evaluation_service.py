@@ -49,7 +49,7 @@ class LangsmithEvaluationService:
         self.dataset_name = dataset_name
         self.dataset_id = self.dataset_exists(dataset_name)
         if not self.dataset_id:
-            self.dataset_id = self.create_dataset(dataset_name)
+            self.dataset_id = self.create_dataset()
 
     def dataset_exists(self, dataset_name: str) -> Optional[uuid.UUID]:
         """Check if a dataset with the given name exists.
